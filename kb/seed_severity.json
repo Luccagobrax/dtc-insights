@@ -1,0 +1,14 @@
+[
+{"spn": 100, "fmi": 1, "title": "Pressão de óleo baixa", "severity": "Alta", "sop": [
+"Parar imediatamente se pressão < limite",
+"Checar nível de óleo e vazamentos",
+"Testar sensor/chicote; medir pressão com manômetro"
+], "can_run": false},
+
+
+{"spn": 102, "fmi": 18, "title": "Temperatura do coolant alta (intermitente)", "severity": "Média", "sop": [
+"Verificar ventoinha",
+"Checar nível de coolant",
+"Observar padrão em subida/carga"
+], "can_run": true}
+]

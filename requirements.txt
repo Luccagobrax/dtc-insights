@@ -1,0 +1,9 @@
+agno
+fastapi
+uvicorn
+pydantic
+httpx
+streamlit
+python-dotenv
+google-cloud-bigquery
+google-auth
