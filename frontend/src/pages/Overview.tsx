@@ -5,83 +5,143 @@ const cards = [
     to: "/assistente",
     title: "Assistente Inteligente",
     description: "Converse com o assistente IA para tirar dúvidas e obter insights imediatos.",
-    accent: "from-sky-400 via-blue-500 to-indigo-500",
+    highlights: [
+      "Faça perguntas sobre algum cliente ou veículo",
+      "Envie contexto adicional para refinar as respostas",
+      "Receba insights valiosos em poucos cliques",
+    ],
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        className="h-7 w-7"
+      >
+        <path
+          d="M20 12c0 3.314-2.91 6-6.5 6-1.362 0-2.633-.384-3.675-1.04L6 19l.832-3.328C6.298 14.64 6 13.85 6 13c0-3.314 2.91-6 6.5-6S20 8.686 20 12Z"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path d="M8 5.5a4 4 0 0 1 7.874-.75" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
   },
   {
     to: "/relatorios",
     title: "Relatórios Dinâmicos",
     description: "Acompanhe indicadores, exporte dados e gere análises personalizadas.",
-    accent: "from-emerald-400 via-lime-400 to-amber-400",
+    highlights: [
+      "Monitore KPIs operacionais em tempo real",
+      "Gere comparativos por período e categoria",
+      "Exporte dashboards para apresentações executivas",
+    ],
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        className="h-7 w-7"
+      >
+        <path d="M4 20V9" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M10 20V4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 20v-5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M20 20V8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
   },
   {
     to: "/assistente",
     title: "Contexto de Veículos",
     description: "Utilize placas, chassi ou IMEI para enriquecer suas conversas e buscas.",
-    accent: "from-fuchsia-500 via-rose-500 to-orange-500",
+    highlights: [
+      "Pesquise histórico de veículos em segundos",
+      "Cruze dados de diferentes fontes automaticamente",
+      "Detecte padrões e possíveis fraudes com alertas",
+    ],
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        className="h-7 w-7"
+      >
+        <path
+          d="M3 13v6c0 1.105.895 2 2 2h14c1.105 0 2-.895 2-2v-6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M5 11 6.6 6.8A2 2 0 0 1 8.476 5.5h7.048A2 2 0 0 1 17.4 6.8L19 11"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path d="M7 15h10" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M5 11h14" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
   },
 ];
 
 export default function Overview() {
   return (
-    <div className="relative">
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-24 -left-16 h-64 w-64 rounded-full bg-sky-400/40 blur-3xl" aria-hidden />
-        <div className="absolute top-1/2 right-0 h-72 w-72 -translate-y-1/2 rounded-full bg-emerald-300/30 blur-3xl" aria-hidden />
-        <div className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-indigo-400/30 blur-3xl" aria-hidden />
-      </div>
-
-      <section className="rounded-3xl border border-white/60 bg-white/80 p-8 shadow-lg backdrop-blur">
+    <div className="space-y-10">
+      <section className="rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
         <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-white">
           Bem-vindo(a)
         </span>
-        <h1 className="mt-6 text-4xl font-semibold text-slate-900 sm:text-5xl">Visão Geral</h1>
+        <h1 className="mt-6 text-4xl font-semibold text-slate-900 sm:text-6xl">Visão Geral</h1>
         <p className="mt-4 max-w-2xl text-lg text-slate-600">
           Aqui você encontra os principais atalhos para navegar pela plataforma DTC Insights. Explore as ferramentas
           disponíveis e acelere suas análises com uma experiência guiada e intuitiva.
         </p>
       </section>
 
-      <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {cards.map(card => (
           <Link
             key={card.title}
             to={card.to}
-            className="group relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 p-6 shadow-lg transition-transform hover:-translate-y-1 hover:shadow-xl"
+            className="group flex min-h-[320px] flex-col justify-between rounded-3xl border border-slate-200 bg-white p-20 shadow-sm transition-transform hover:-translate-y-1 hover:shadow-lg"
           >
-            <div className={`absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br ${card.accent} opacity-80 blur-2xl transition-transform group-hover:scale-110`} aria-hidden />
-            <div className="relative flex h-full flex-col">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/90 text-white shadow-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  className="h-6 w-6"
-                >
-                  <path d="M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="m12 5 7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+            <div className="flex flex-col gap-6">
+              <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-md">
+                {card.icon}
               </span>
 
-              <h2 className="mt-6 text-2xl font-semibold text-slate-900">{card.title}</h2>
-              <p className="mt-3 text-base text-slate-600">{card.description}</p>
-
-              <span className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-semibold text-slate-900/80 transition-colors group-hover:text-slate-900">
-                Acessar
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  className="h-4 w-4"
-                >
-                  <path d="M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="m12 5 7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
+              <div className="space-y-9">
+                <h2 className="text-2xl font-semibold text-slate-900">{card.title}</h2>
+                <p className="text-base text-slate-600">{card.description}</p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  {card.highlights.map(item => (
+                    <li key={item} className="flex items-start gap-2">
+                      <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-slate-400" aria-hidden />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
+
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900/80 transition-colors group-hover:text-slate-900">
+              Acessar
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-8 w-8"
+              >
+                <path d="M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="m12 5 7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </Link>
         ))}
       </div>
