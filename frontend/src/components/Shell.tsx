@@ -1,41 +1,46 @@
-// frontend/src/components/Shell.tsx
-import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import api from '../lib/api';
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import Sidebar from "./Sidebar";
+import api from "../lib/api";
+import { useSessionStore } from "../store/useSession";
 
 export default function Shell() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { setUser, setToken } = useSessionStore();
+
+   // rotas onde o sidebar deve sumir
+  const hideRailOn = new Set<string>(["/", "/assistente"]);
+  const hideRail = hideRailOn.has(location.pathname);
 
   function logout() {
-    // se tiver store de sessão, limpe aqui
-    navigate('/login');
+    setUser(null);
+    setToken(null);
+    navigate("/login");
   }
 
   useEffect(() => {
-    // só pra confirmar que o back responde
-    api.get('/health').then(r => console.log('health:', r.data))
-                      .catch(console.error);
+    api.get("/health").then(r => console.log("health:", r.data)).catch(console.error);
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
-      <header className="border-b border-slate-800 px-6 py-3 flex items-center justify-between">
-        <div className="font-semibold">dtc-insights</div>
-        <nav className="flex items-center gap-6">
-          <Link to="/assistente" className="hover:underline">Assistente</Link>
+    <div className="min-h-screen flex bg-[var(--app-bg)] text-[var(--app-fg)]">
+      <Sidebar hideRail={hideRail} />
+      <div className="flex-1 flex flex-col">
+        <header className="border-b border-slate-300/60 px-6 py-3 flex items-center justify-between">
+          <div className="font-semibold">Visão Geral</div>
           <button
             onClick={logout}
-            className="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600"
+            className="rounded-md bg-slate-900 text-white px-3 py-2 text-sm hover:opacity-90 transition"
           >
             Sair
           </button>
-        </nav>
-      </header>
+        </header>
 
-      {/* AQUI as rotas filhas renderizam */}
-      <main className="p-6">
-        <Outlet />
-      </main>
+        <main className="flex-1 p-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

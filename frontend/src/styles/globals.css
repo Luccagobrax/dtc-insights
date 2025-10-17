@@ -2,4 +2,322 @@
 @tailwind components;
 @tailwind utilities;
 
+/* === Neometric === */
+@font-face {
+  font-family: "Neometric";
+  src: url("../fonts/Neometric/Neometric-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Neometric";
+  src: url("../fonts/Neometric/Neometric-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Neometric";
+  src: url("../fonts/Neometric/Neometric-ExtraBold.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Neometric";
+  src: url("../fonts/Neometric/Neometric-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* fundo padrão da plataforma */
+:root { --bg-platform: #E4E4E6; }
+
+:root{
+  --app-bg: var(--bg-platform);
+  --app-fg: #111827;
+
+  /* sidebar (mesma paleta do Login) */
+  --gbx-bg: #111827;
+  --gbx-drawer: #ffffff;
+  --gbx-text: #111827;
+  --gbx-muted: #6B7280;
+  --gbx-border: #E5E7EB;
+  --gbx-accent: #FFD73A;
+  --gbx-active: #111827;
+}
+
 html, body, #root { height: 100%; }
+body {
+  background: var(--bg-platform);
+  font-family: "Neometric", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+/* ==== SIDEBAR ==== */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  z-index: 30;
+  background: var(--gbx-drawer);
+  border-right: 1px solid var(--gbx-border);
+  font-family: "Neometric", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+/* trilho fixo */
+.rail {
+  width: 56px;
+  background: var(--gbx-bg);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  position: relative;
+  z-index: 31;
+}
+.hamburger {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.hamburger span {
+  width: 18px;
+  height: 2px;
+  background: #fff;
+  display: block;
+  margin: 2px 0;
+  border-radius: 2px;
+}
+.railItems {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  align-items: center;
+}
+.railBtn {
+  position: relative;
+  width: 100%;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: #cfd6e6;
+  text-decoration: none;
+}
+.railBtn .ico { width: 22px; height: 22px; }
+.railBtn.active { color: #fff; }
+.railBtn.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 4px;
+  height: 70%;
+  background: var(--gbx-accent);
+  border-radius: 0 3px 3px 0;
+}
+.railBtn .badgeNovo {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  transform: scale(.85);
+}
+
+/* drawer (desktop empurra / mobile sobrepõe) */
+.drawer {
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  background: var(--gbx-drawer);
+  transition: transform .2s ease;
+}
+.brand {
+  font-weight: 800;
+  font-size: 18px;
+  padding: 16px 18px;
+  color: var(--gbx-text);
+  letter-spacing: .2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.menu {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  gap: 2px;
+}
+.navlink {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--gbx-muted);
+  text-decoration: none;
+  position: relative;
+}
+.navlink .ico { width: 22px; height: 22px; }
+.navlink:hover { background: #f7f7fb; color: var(--gbx-text); }
+.navlink.active { background: #f2f4f8; color: var(--gbx-active); font-weight: 700; }
+.badgeNovo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 1;
+  background: var(--gbx-accent);
+  color: #000;
+  margin-left: auto;
+}
+
+/* rodapé */
+.sidebarFooter {
+  margin-top: auto;
+  padding: 12px 16px;
+  color: var(--gbx-muted);
+  font-size: 12px;
+  border-top: 1px solid var(--gbx-border);
+}
+
+/* estado colapsado */
+.sidebar.is-collapsed .drawer {
+  transform: translateX(-100%);
+  width: 0;
+  padding: 0;
+  margin: 0;
+}
+
+/* ===== Responsividade ===== */
+@media (max-width: 768px) {
+  /* Drawer padrão no mobile (quando existe trilho azul, ele abre a partir de 56px) */
+  .drawer {
+    position: absolute;
+    left: 56px;
+    top: 0;
+    height: 100%;
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    z-index: 1001;
+  }
+
+  /* Quando escondemos o trilho azul (no-rail), o drawer encosta na esquerda */
+  .sidebar.no-rail .drawer {
+    left: 0;
+  }
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+/* ====== COMPONENT TOKENS ====== */
+@layer components {
+  .gbx-input {
+    @apply rounded-xl border border-[color:var(--gbx-border)] bg-white px-3 py-2 text-sm
+           outline-none ring-0 focus:border-slate-400;
+  }
+  .gbx-btn {
+    background: var(--gbx-accent);
+    color: #000;
+    @apply rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-60;
+  }
+  .gbx-btn:hover { filter: brightness(0.95); }
+}
+
+/* ====== ASSISTENTE PAGE LAYOUT ====== */
+.assistente-wrap {
+  height: 100%;              /* ocupa toda a área do <main> */
+  display: grid;
+  align-content: end;        /* ancora no rodapé */
+  justify-content: center;   /* centraliza horizontal */
+  padding: 24px;
+  background: var(--app-bg);
+}
+
+/* card do chat */
+.chat-card {
+  width: 100%;
+  max-width: 960px;
+  background: #fff;
+  border: 1px solid var(--gbx-border);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* header do card */
+.chat-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gbx-border);
+  background: #fff;
+}
+.chat-title { font-weight: 800; color: var(--gbx-text); }
+
+/* lista de mensagens */
+.chat-list {
+  max-height: clamp(240px, 50vh, 520px);
+  overflow: auto;
+  padding: 16px;
+  background: #fafafa;
+}
+
+/* mensagens */
+.chat-msg {
+  display: grid;
+  grid-template-columns: 32px minmax(0,1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.chat-msg .avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--gbx-bg);
+}
+.chat-msg.user .avatar { background: #cbd5e1; }
+.chat-msg .bubble {
+  background: #fff;
+  border: 1px solid var(--gbx-border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  color: var(--gbx-text);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.chat-msg.user .bubble { background: #f7f7fb; }
+
+/* composer (fica colado embaixo do card) */
+.composer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-top: 1px solid var(--gbx-border);
+  background: #fff;
+}
+
+/* responsividade */
+@media (max-width: 768px) {
+  .composer { flex-wrap: wrap; }
+  .composer .gbx-input.w-48 { width: 100%; }
+}

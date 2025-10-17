@@ -6,7 +6,7 @@ import './styles/globals.css';
 
 import App from './App';
 import Shell from './components/Shell';
-import Login from './pages/Login';
+import { Login } from './pages/Login'
 import Assistente from './pages/Assistente';
 
 const router = createBrowserRouter([
