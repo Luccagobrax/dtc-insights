@@ -15,7 +15,7 @@ export default function Shell() {
   const hideRail = hideRailOn.has(location.pathname);
 
    const titles: Record<string, string> = {
-    "/": "Início",
+    "/": "Página inicial",
     "/visao-geral": "Visão geral",
     "/assistente": "Assistente IA",
     "/relatorios": "Relatórios",
