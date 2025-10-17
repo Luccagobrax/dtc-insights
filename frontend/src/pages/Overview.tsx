@@ -79,39 +79,6 @@ const cards = [
       </svg>
     ),
   },
-  {
-    to: "/assistente",
-    title: "Contexto de Veículos",
-    description: "Utilize placas, chassi ou IMEI para enriquecer suas conversas e buscas.",
-    highlights: [
-      "Pesquise histórico de veículos em segundos",
-      "Cruze dados de diferentes fontes automaticamente",
-      "Detecte padrões e possíveis fraudes com alertas",
-    ],
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        className="h-7 w-7"
-      >
-        <path
-          d="M3 13v6c0 1.105.895 2 2 2h14c1.105 0 2-.895 2-2v-6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M5 11 6.6 6.8A2 2 0 0 1 8.476 5.5h7.048A2 2 0 0 1 17.4 6.8L19 11"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path d="M7 15h10" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M5 11h14" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
 ];
 
 export default function Overview() {
