@@ -1,4 +1,6 @@
 # backend/src/api/main.py
+from datetime import date
+
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,6 +40,26 @@ def get_telemetry(vehicle_key: str, minutes: int = 30):
 def kb_lookup(spn: int, fmi: int):
     return kb_service.lookup(spn, fmi)
 
+
+@app.get("/overview/dtc-events")
+def overview_events(
+    chassi: str | None = None,
+    customer: str | None = None,
+    dtc: str | None = None,
+    event_date: date | None = None,
+    days: int = 30,
+    limit: int = 500,
+):
+    items = bq_client.get_overview_events(
+        chassi_last8=chassi,
+        customer=customer,
+        dtc=dtc,
+        event_date=event_date,
+        days=days,
+        limit=limit,
+    )
+    return {"items": items}
+
 @app.get("/", include_in_schema=False)
 def root():
     return RedirectResponse(url="/docs")
@@ -62,13 +84,3 @@ def chat(req: ChatRequest):
         tips.append(f"- fetch_telemetry(vehicle_key='{req.vehicle_key}', minutes={req.minutes})")
     if req.customer_name:
         tips.append(f"- fetch_customer_summary(customer_name='{req.customer_name}', days={req.days})")
-
-    if tips:
-        prompt += "\n\nSe útil, use as ferramentas:\n" + "\n".join(tips)
-
-    try:
-        result = agent.run(prompt)
-        text = getattr(result, "content", None) or getattr(result, "text", None) or str(result)
-        return {"reply": text}
-    except Exception as e:
-        return {"reply": f"Houve um erro ao buscar as informações. Por favor, tente novamente. Detalhe: {e}"}

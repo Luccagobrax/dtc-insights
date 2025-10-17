@@ -13,7 +13,7 @@ export function Login() {
     event.preventDefault();
     setUser({ name: email, email });
     setToken('fake-auth-token');
-    navigate('/assistente');
+    navigate('/');
   }
 
   return (

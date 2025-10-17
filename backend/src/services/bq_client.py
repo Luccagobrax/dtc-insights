@@ -1,6 +1,6 @@
 # backend/src/services/bq_client.py
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import List, Dict, Optional
 
 from google.cloud import bigquery
@@ -210,6 +210,186 @@ def get_dtcs(vehicle_key: str, hours: int = 24) -> List[Dict]:
     ]
     job = _client.query(sql, job_config=bigquery.QueryJobConfig(query_parameters=params))
     return [dict(r) for r in job.result()]
+
+def get_overview_events(
+    chassi_last8: Optional[str] = None,
+    customer: Optional[str] = None,
+    dtc: Optional[str] = None,
+    event_date: Optional[date] = None,
+    days: int = 30,
+    limit: int = 500,
+) -> List[Dict]:
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    chassi_key = (chassi_last8 or "").strip().upper()
+    customer_key = (customer or "").strip().lower()
+    dtc_key = (dtc or "").strip().upper()
+
+    date_start: Optional[datetime] = None
+    date_end: Optional[datetime] = None
+    if event_date:
+        date_start = datetime.combine(event_date, time.min, tzinfo=timezone.utc)
+        date_end = date_start + timedelta(days=1)
+
+    filters: list[str] = []
+    params: list[bigquery.ScalarQueryParameter] = [
+        bigquery.ScalarQueryParameter("since", "TIMESTAMP", since),
+        bigquery.ScalarQueryParameter("limit", "INT64", limit),
+    ]
+
+    if chassi_key:
+        filters.append("tf.chassi_last8 = @chassi")
+        params.append(bigquery.ScalarQueryParameter("chassi", "STRING", chassi_key))
+
+    if customer_key:
+        filters.append("LOWER(tf.customer_name) LIKE @customer")
+        params.append(bigquery.ScalarQueryParameter("customer", "STRING", f"%{customer_key}%"))
+
+    if dtc_key:
+        filters.append("tf.dtc = @dtc")
+        params.append(bigquery.ScalarQueryParameter("dtc", "STRING", dtc_key))
+
+    if date_start and date_end:
+        filters.append("tf.ts >= @date_start")
+        filters.append("tf.ts < @date_end")
+        params.append(bigquery.ScalarQueryParameter("date_start", "TIMESTAMP", date_start))
+        params.append(bigquery.ScalarQueryParameter("date_end", "TIMESTAMP", date_end))
+
+    where_clause = " AND ".join(["TRUE"] + filters)
+
+    sql = f"""
+    WITH dtc_raw AS (
+      SELECT
+        t.event_datetime_utc                       AS ts,
+        UPPER(CAST(t.DTC AS STRING))               AS dtc,
+        SAFE_CAST(t.spn AS INT64)                  AS spn,
+        SAFE_CAST(t.fmi AS INT64)                  AS fmi,
+        t.status, t.lat, t.lon,
+        UPPER(CAST(t.imeis AS STRING))             AS imeis
+      FROM `{TBL_TELEMETRY}` t
+      WHERE t.event_datetime_utc >= @since
+    ),
+    dtc_norm AS (
+      SELECT
+        r.ts, r.dtc, r.spn, r.fmi, r.status, r.lat, r.lon,
+        TRIM(imei) AS imei_norm
+      FROM dtc_raw r,
+      UNNEST(SPLIT(REGEXP_REPLACE(r.imeis, r'[;,\s]+', ','), ',')) AS imei
+    ),
+    dev AS (
+      SELECT d.device_id, UPPER(CAST(d.identification AS STRING)) AS imei
+      FROM `{TBL_DEVICES}` d
+    ),
+    inst AS (
+      SELECT i.device_id, i.vehicle_id, CAST(i.start_date AS TIMESTAMP) AS start_ts
+      FROM `{TBL_INSTALLS}` i
+    ),
+    veh AS (
+      SELECT
+        v.vehicle_id,
+        UPPER(v.plate)                             AS plate,
+        UPPER(CAST(v.chassi AS STRING))           AS chassi,
+        RIGHT(UPPER(CAST(v.chassi AS STRING)), 8) AS chassi_last8,
+        v.customer_id,
+        v.customer_name
+      FROM `{TBL_VEHICLES}` v
+    ),
+    t_dev AS (
+      SELECT n.*, d.device_id
+      FROM dtc_norm n
+      JOIN dev d ON UPPER(n.imei_norm) = d.imei
+    ),
+    t_dev_inst AS (
+      SELECT td.*, iv.vehicle_id
+      FROM t_dev td
+      JOIN inst iv
+        ON iv.device_id = td.device_id
+       AND td.ts >= iv.start_ts
+    ),
+    t_full AS (
+      SELECT
+        tdi.ts,
+        tdi.dtc,
+        tdi.spn,
+        tdi.fmi,
+        tdi.status,
+        tdi.lat,
+        tdi.lon,
+        tdi.imei_norm,
+        v.plate,
+        v.customer_id,
+        v.customer_name,
+        v.chassi,
+        v.chassi_last8
+      FROM t_dev_inst tdi
+      JOIN veh v ON v.vehicle_id = tdi.vehicle_id
+    )
+    SELECT
+      tf.ts,
+      tf.dtc,
+      tf.spn,
+      tf.fmi,
+      tf.status,
+      tf.lat,
+      tf.lon,
+      tf.customer_name,
+      tf.chassi_last8,
+      tf.plate,
+      tf.imei_norm AS imei,
+      dc.Description AS dtc_description
+    FROM t_full tf
+    JOIN `{TBL_DTC_CODES}` dc ON UPPER(dc.DTC) = tf.dtc
+    WHERE {where_clause}
+    ORDER BY tf.ts DESC
+    LIMIT @limit
+    """
+
+    job = _client.query(sql, job_config=bigquery.QueryJobConfig(query_parameters=params))
+    rows = [dict(r) for r in job.result()]
+
+    aggregated: Dict[str, Dict] = {}
+
+    for row in rows:
+        cust = row.get("customer_name") or "Sem cliente"
+        chassi = row.get("chassi_last8") or ""
+        key = f"{cust}|{chassi}"
+        entry = aggregated.setdefault(
+            key,
+            {
+                "customer_name": cust,
+                "chassi_last8": chassi,
+                "plate": row.get("plate"),
+                "dtc_count": 0,
+                "most_recent": None,
+                "events": [],
+            },
+        )
+
+        ts: Optional[datetime] = row.get("ts")
+        entry["dtc_count"] += 1
+
+        if ts and (entry["most_recent"] is None or ts > entry["most_recent"]):
+            entry["most_recent"] = ts
+
+        entry["events"].append(
+            {
+                "dtc": row.get("dtc"),
+                "dtc_description": row.get("dtc_description"),
+                "timestamp": ts.isoformat() if ts else None,
+                "status": row.get("status"),
+                "lat": row.get("lat"),
+                "lon": row.get("lon"),
+                "imei": row.get("imei"),
+            }
+        )
+
+    items: List[Dict] = []
+    for entry in aggregated.values():
+        most_recent_dt: Optional[datetime] = entry["most_recent"]
+        entry["most_recent"] = most_recent_dt.isoformat() if isinstance(most_recent_dt, datetime) else None
+        items.append(entry)
+
+    items.sort(key=lambda item: item.get("most_recent") or "", reverse=True)
+    return items
 
 # --------------------------------------------------------------------------
 # Telemetria curta (últimos N minutos) para PLACA / IMEI / CHASSI(8)

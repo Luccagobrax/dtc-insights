@@ -1,6 +1,32 @@
 import { Link } from "react-router-dom";
 
 const cards = [
+    {
+    to: "/visao-geral",
+    title: "Visão geral de DTCs",
+    description:
+      "Acompanhe rapidamente os eventos mais recentes, filtre por cliente ou chassi e visualize tudo no mapa.",
+    highlights: [
+      "Filtros por chassi, cliente, código e data",
+      "Lista com contagem de DTCs por veículo",
+      "Mapa interativo com a localização das ocorrências",
+    ],
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        className="h-7 w-7"
+      >
+        <path d="M3 3h7v7H3z" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M14 3h7v7h-7z" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3 14h7v7H3z" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="m17.5 14.5 3.5 6.5-6.5-3.5L11 21l3.5-6.5 3-3z" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
   {
     to: "/assistente",
     title: "Assistente Inteligente",
@@ -95,11 +121,30 @@ export default function Overview() {
         <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-white">
           Bem-vindo(a)
         </span>
-        <h1 className="mt-6 text-4xl font-semibold text-slate-900 sm:text-6xl">Visão Geral</h1>
+        <h1 className="mt-6 text-4xl font-semibold text-slate-900 sm:text-6xl">DTC's insights</h1>
         <p className="mt-4 max-w-2xl text-lg text-slate-600">
           Aqui você encontra os principais atalhos para navegar pela plataforma DTC Insights. Explore as ferramentas
           disponíveis e acelere suas análises com uma experiência guiada e intuitiva.
         </p>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Link
+            to="/visao-geral"
+            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            Abrir Visão geral de DTCs
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="h-4 w-4"
+            >
+              <path d="M5 12h14" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="m12 5 7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+        </div>
       </section>
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

@@ -3,6 +3,7 @@ import Shell from "./components/Shell";
 import { Login } from "./pages/Login";
 import Assistente from "./pages/Assistente";
 import Overview from "./pages/Overview";
+import VisaoGeral from "./pages/VisaoGeral";
 import Relatorios from "./pages/Relatorios";
 import { useSessionStore } from "./store/useSession";
 
@@ -18,6 +19,7 @@ export default function App() {
 
       <Route element={<Protected><Shell /></Protected>}>
         <Route index element={<Overview />} />
+        <Route path="/visao-geral" element={<VisaoGeral />} />
         <Route path="/assistente" element={<Assistente />} />
         <Route path="/relatorios" element={<Relatorios />} />
       </Route>

@@ -23,6 +23,18 @@ function IconBot(p: SvgProps) {
     </svg>
   );
 }
+function IconCompass(p: SvgProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} {...p}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m14.5 9.5-1.4 4.2-4.2 1.4 1.4-4.2z" />
+      <path d="M12 3v2" />
+      <path d="M21 12h-2" />
+      <path d="M12 19v2" />
+      <path d="M5 12H3" />
+    </svg>
+  );
+}
 function IconLogin(p: SvgProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} {...p}>
@@ -96,6 +108,9 @@ export default function Sidebar({ hideRail = false }: { hideRail?: boolean }) {
             <NavLink to="/" className={railClass} title="Início" end>
               <IconHome className="ico" />
             </NavLink>
+                        <NavLink to="/visao-geral" className={railClass} title="Visão geral">
+              <IconCompass className="ico" />
+            </NavLink>
             <NavLink to="/assistente" className={railClass} title="Assistente">
               <IconBot className="ico" />
             </NavLink>
@@ -116,6 +131,9 @@ export default function Sidebar({ hideRail = false }: { hideRail?: boolean }) {
         <nav className="menu">
           <NavLink to="/" className={linkClass} end>
             <IconHome className="ico" /><span>Página Inicial</span>
+          </NavLink>
+          <NavLink to="/visao-geral" className={linkClass}>
+            <IconCompass className="ico" /><span>Visão geral</span>
           </NavLink>
           <NavLink to="/assistente" className={linkClass}>
             <IconBot className="ico" /><span>Assistente</span>
