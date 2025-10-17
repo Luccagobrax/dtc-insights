@@ -3,15 +3,24 @@ import { useEffect } from "react";
 import Sidebar from "./Sidebar";
 import api from "../lib/api";
 import { useSessionStore } from "../store/useSession";
+import logo from "../assets/logo-gobrax.png";
 
 export default function Shell() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setUser, setToken } = useSessionStore();
 
-   // rotas onde o sidebar deve sumir
+    // rotas onde o sidebar deve sumir
   const hideRailOn = new Set<string>(["/", "/assistente"]);
   const hideRail = hideRailOn.has(location.pathname);
+
+   const titles: Record<string, string> = {
+    "/": "Inicio",
+    "/assistente": "Assistente IA",
+    "/relatorios": "Relatórios",
+  };
+
+  const title = titles[location.pathname] ?? "dtc-insights";
 
   function logout() {
     setUser(null);
@@ -27,11 +36,14 @@ export default function Shell() {
     <div className="min-h-screen flex bg-[var(--app-bg)] text-[var(--app-fg)]">
       <Sidebar hideRail={hideRail} />
       <div className="flex-1 flex flex-col">
-        <header className="border-b border-slate-300/60 px-6 py-3 flex items-center justify-between">
-          <div className="font-semibold">Visão Geral</div>
+        <header className="border-b border-slate-300/60 px-6 py-3 flex items-center gap-4">
+          <div className="flex-1 flex justify-center">
+            <img src={logo} alt="Logo Gobrax" className="h-12 object-contain" />
+          </div>
+          <div className="font-semibold">{title}</div>
           <button
             onClick={logout}
-            className="rounded-md bg-slate-900 text-white px-3 py-2 text-sm hover:opacity-90 transition"
+            className="rounded-md bg-slate-800 text-white px-3 py-2 text-sm hover:opacity-90 transition"
           >
             Sair
           </button>

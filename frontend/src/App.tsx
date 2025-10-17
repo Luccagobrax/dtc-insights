@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Shell from "./components/Shell";
 import { Login } from "./pages/Login";
 import Assistente from "./pages/Assistente";
-import Dashboard from "./pages/Dashboard";
+import Overview from "./pages/Overview";
 import Relatorios from "./pages/Relatorios";
 import { useSessionStore } from "./store/useSession";
 
@@ -17,13 +17,12 @@ export default function App() {
       <Route path="/login" element={<Login />} />
 
       <Route element={<Protected><Shell /></Protected>}>
-        <Route index element={<Navigate to="/assistente" replace />} />
+        <Route index element={<Overview />} />
         <Route path="/assistente" element={<Assistente />} />
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/relatorios" element={<Relatorios />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/assistente" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

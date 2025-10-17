@@ -93,7 +93,7 @@ export default function Sidebar({ hideRail = false }: { hideRail?: boolean }) {
           </button>
 
           <div className="railItems">
-            <NavLink to="/dashboard" className={railClass} title="Início" end>
+            <NavLink to="/" className={railClass} title="Início" end>
               <IconHome className="ico" />
             </NavLink>
             <NavLink to="/assistente" className={railClass} title="Assistente">
@@ -101,7 +101,6 @@ export default function Sidebar({ hideRail = false }: { hideRail?: boolean }) {
             </NavLink>
             <NavLink to="/relatorios" className={railClass} title="Relatórios">
               <IconReport className="ico" />
-              <BadgeNovo />
             </NavLink>
             <NavLink to="/login" className={railClass} title="Login">
               <IconLogin className="ico" />
@@ -115,14 +114,14 @@ export default function Sidebar({ hideRail = false }: { hideRail?: boolean }) {
         <div className="brand" title="dtc-insights">dtc-insights</div>
 
         <nav className="menu">
-          <NavLink to="/dashboard" className={linkClass} end>
-            <IconHome className="ico" /><span>Início</span>
+          <NavLink to="/" className={linkClass} end>
+            <IconHome className="ico" /><span>Página Inicial</span>
           </NavLink>
           <NavLink to="/assistente" className={linkClass}>
             <IconBot className="ico" /><span>Assistente</span>
           </NavLink>
           <NavLink to="/relatorios" className={linkClass}>
-            <IconReport className="ico" /><span>Relatórios</span><BadgeNovo />
+            <IconReport className="ico" /><span>Relatórios</span>
           </NavLink>
           <NavLink to="/login" className={linkClass}>
             <IconLogin className="ico" /><span>Login</span>
