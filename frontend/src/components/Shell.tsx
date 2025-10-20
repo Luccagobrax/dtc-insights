@@ -50,7 +50,7 @@ export default function Shell() {
           </button>
         </header>
 
-        <main className="flex flex-1 flex-col overflow-y-auto bg-[var(--app-bg)] p-6">
+        <main className="flex flex-1 flex-col overflow-hidden bg-[var(--app-bg)] p-6">
           <Outlet />
         </main>
       </div>

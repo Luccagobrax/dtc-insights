@@ -9,6 +9,8 @@ declare global {
 }
 
 const BRAZIL_CENTER: [number, number] = [-14.235004, -51.92528];
+const DEFAULT_ZOOM = 5;
+const MAP_MAX_AUTO_ZOOM = 7;
 const LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 const LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 
@@ -159,7 +161,7 @@ export default function VisaoGeral() {
         setMapError(null);
 
         if (!mapRef.current) {
-          mapRef.current = L.map(mapContainerRef.current).setView(BRAZIL_CENTER, 4);
+                    mapRef.current = L.map(mapContainerRef.current).setView(BRAZIL_CENTER, DEFAULT_ZOOM);
           L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a>",
           }).addTo(mapRef.current);
@@ -193,7 +195,7 @@ export default function VisaoGeral() {
         });
 
         const bounds = L.latLngBounds(eventsWithCoords.map((event) => [event.lat, event.lon]));
-        mapRef.current.fitBounds(bounds, { padding: [32, 32], maxZoom: 12 });
+        mapRef.current.fitBounds(bounds, { padding: [32, 32], maxZoom: MAP_MAX_AUTO_ZOOM });
       })
       .catch((err) => {
         console.error("Falha ao carregar o mapa", err);
@@ -206,7 +208,7 @@ export default function VisaoGeral() {
   }, [eventsWithCoords]);
 
   return (
-    <div className="flex flex-1 flex-col gap-6">
+    <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
       <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
         <h1 className="text-3xl font-semibold text-slate-900">Visão geral de DTCs</h1>
         <p className="mt-2 text-sm text-slate-600">
@@ -280,8 +282,8 @@ export default function VisaoGeral() {
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
       </section>
 
-      <section className="grid flex-1 content-start gap-6 lg:grid-cols-[420px_minmax(0,1fr)]">
-        <div className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="grid min-h-0 gap-6 overflow-hidden lg:grid-cols-[420px_minmax(0,1fr)]">
+        <div className="flex min-h-0 flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between pb-4">
             <h2 className="text-lg font-semibold text-slate-900">Eventos recentes</h2>
             {loading && <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Carregando...</span>}
@@ -316,12 +318,12 @@ export default function VisaoGeral() {
           )}
         </div>
 
-        <div className="flex min-h-[400px] flex-col rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="flex min-h-0 flex-col rounded-3xl border border-slate-200 bg-white p-3 shadow-sm lg:min-h-[420px]">
           <div className="mb-3 flex items-center justify-between px-2">
             <h2 className="text-lg font-semibold text-slate-900">Mapa de ocorrências</h2>
             <span className="text-xs font-medium text-slate-500">{eventsWithCoords.length} pontos mapeados</span>
           </div>
-          <div className="relative flex-1 overflow-hidden rounded-2xl border border-slate-100 bg-slate-100/40 shadow-inner min-h-[320px]">
+          <div className="relative flex-1 min-h-[360px] overflow-hidden rounded-2xl border border-slate-100 bg-slate-100/40 shadow-inner">
             <div ref={mapContainerRef} className="absolute inset-0" />
             {mapError && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/80 text-sm text-red-600">
