@@ -37,7 +37,7 @@ export default function Shell() {
     <div className="min-h-screen flex bg-[var(--app-bg)] text-[var(--app-fg)]">
       <Sidebar hideRail={hideRail} />
       <div className="flex-1 flex flex-col">
-        <header className="flex items-center gap-4 border-b border-slate-200 bg-white/95 px-6 py-3 shadow-sm backdrop-blur">
+        <header className="flex h-[72px] items-center gap-4 border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur">
           <div className="flex-1 flex justify-center">
             <img src={logo} alt="Logo Gobrax" className="h-10 object-contain" />
           </div>
@@ -50,7 +50,10 @@ export default function Shell() {
           </button>
         </header>
 
-        <main className="flex flex-1 flex-col overflow-hidden bg-[var(--app-bg)] p-6">
+        <main
+          className="flex flex-1 flex-col overflow-hidden bg-[var(--app-bg)] p-6"
+          style={{ height: "calc(100vh - 72px)" }}
+        >
           <Outlet />
         </main>
       </div>
