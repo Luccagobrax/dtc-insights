@@ -34,26 +34,28 @@ export default function Shell() {
   }, []);
 
   return (
-    <div className="min-h-screen flex bg-[var(--app-bg)] text-[var(--app-fg)]">
-      <Sidebar hideRail={hideRail} />
-      <div className="flex-1 flex flex-col">
-        <header className="flex h-[72px] items-center gap-4 border-b border-slate-200 bg-white/95 px-6 shadow-sm backdrop-blur">
-          <div className="flex-1 flex justify-center">
+<div className="h-screen w-screen overflow-hidden bg-[var(--app-bg)] text-[var(--app-fg)]">
+      <header className="h-[72px] border-b border-slate-200 bg-white/95 px-6 shadow-sm">
+        <div className="flex h-full items-center gap-4">
+          <div className="flex flex-1 justify-center">
             <img src={logo} alt="Logo Gobrax" className="h-10 object-contain" />
           </div>
           <div className="font-semibold">{title}</div>
           <button
             onClick={logout}
-            className="rounded-md bg-slate-800 text-white px-3 py-2 text-sm hover:opacity-90 transition"
+            className="rounded-md bg-slate-800 px-3 py-2 text-sm text-white transition hover:opacity-90"
           >
             Sair
           </button>
-        </header>
+        </div>
+      </header>
 
-        <main
-          className="flex flex-1 flex-col overflow-hidden bg-[var(--app-bg)] p-6"
-          style={{ height: "calc(100vh - 72px)" }}
-        >
+      <div className="h-[calc(100vh-72px)] grid grid-cols-1 grid-rows-[auto_1fr] bg-[var(--app-bg)] lg:grid-cols-[316px_1fr] lg:grid-rows-1">
+        <aside className="h-full overflow-y-auto border-r border-slate-200 bg-white">
+          <Sidebar hideRail={hideRail} />
+        </aside>
+
+        <main id="app-main" className="h-full overflow-hidden bg-[var(--app-bg)]">
           <Outlet />
         </main>
       </div>

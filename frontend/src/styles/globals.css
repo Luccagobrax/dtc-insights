@@ -56,13 +56,21 @@ body {
   font-family: "Neometric", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 }
 
+#map-wrapper, #map-container, .leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+.leaflet-container, #map-container {
+  position: relative !important;
+}
+
 /* ==== SIDEBAR ==== */
 .sidebar {
-  position: sticky;
-  top: 0;
-  height: 100vh;
   display: flex;
-  z-index: 30;
+  height: 100%;
+  min-height: 0;
+  position: relative;
   background: var(--gbx-drawer);
   border-right: 1px solid var(--gbx-border);
   font-family: "Neometric", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
@@ -140,6 +148,8 @@ body {
   flex-direction: column;
   background: var(--gbx-drawer);
   transition: transform .2s ease;
+  height: 100%;
+  min-height: 0;
 }
 .brand {
   font-weight: 800;
@@ -202,31 +212,7 @@ body {
 }
 
 /* ===== Responsividade ===== */
-@media (max-width: 768px) {
-  /* Drawer padrão no mobile (quando existe trilho azul, ele abre a partir de 56px) */
-  .drawer {
-    position: absolute;
-    left: 56px;
-    top: 0;
-    height: 100%;
-    box-shadow: 0 10px 30px rgba(0,0,0,.18);
-    z-index: 1001;
-  }
-
-  /* Quando escondemos o trilho azul (no-rail), o drawer encosta na esquerda */
-  .sidebar.no-rail .drawer {
-    left: 0;
-  }
-}
-
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.35);
-  border: none;
-  cursor: pointer;
-  z-index: 1000;
-}
+.backdrop { display: none; }
 
 /* ====== COMPONENT TOKENS ====== */
 @layer components {

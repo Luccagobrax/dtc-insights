@@ -207,158 +207,190 @@ export default function VisaoGeral() {
     };
   }, [eventsWithCoords]);
 
+    const mapInstance = mapRef.current;
+
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
 
-    const handleResize = () => {
-      if (!mapRef.current) return;
-      window.requestAnimationFrame(() => {
-        mapRef.current?.invalidateSize();
-      });
-    };
+    const map = mapInstance;
+    if (!map) {
+      return;
+    }
 
-    window.addEventListener("resize", handleResize);
+    const invalidate = () => map.invalidateSize();
+    const timeout = window.setTimeout(invalidate, 0);
 
-    let resizeObserver: ResizeObserver | undefined;
-    if (mapContainerRef.current && "ResizeObserver" in window) {
-      resizeObserver = new ResizeObserver(handleResize);
-      resizeObserver.observe(mapContainerRef.current);
+    const onResize = () => map.invalidateSize();
+    window.addEventListener("resize", onResize);
+
+    let resizeObserver: ResizeObserver | null = null;
+    const container = document.getElementById("map-container");
+
+    if (container && "ResizeObserver" in window) {
+      resizeObserver = new ResizeObserver(() => map.invalidateSize());
+      resizeObserver.observe(container);
     }
 
     return () => {
-      window.removeEventListener("resize", handleResize);
-      resizeObserver?.disconnect();
+      window.clearTimeout(timeout);
+      window.removeEventListener("resize", onResize);
+      if (container && resizeObserver) {
+        resizeObserver.unobserve(container);
+        resizeObserver.disconnect();
+      }
     };
-  }, []);
-  
+  }, [mapInstance]);
+
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
-      <section className="shrink-0 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-3xl font-semibold text-slate-900">Visão geral de DTCs</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Explore os eventos recentes utilizando os filtros abaixo. Clique em um item da lista para ver os DTCs detalhados e
-          visualize no mapa a localização das ocorrências.
-        </p>
-      </section>
+    <div className="h-full flex flex-col overflow-hidden">
+      <section className="flex-shrink-0 space-y-4 p-6">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h1 className="text-3xl font-semibold text-slate-900">Visão geral de DTCs</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Explore os eventos recentes utilizando os filtros abaixo. Clique em um item da lista para ver os DTCs detalhados e
+            visualize no mapa a localização das ocorrências.
+          </p>
+        </div>
 
-       <section className="shrink-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <form className="grid gap-4 md:grid-cols-5" onSubmit={handleSubmit}>
-          <div className="flex flex-col">
-            <label className="text-xs font-semibold text-slate-600">Chassi (últimos 8 dígitos)</label>
-            <input
-              type="text"
-              maxLength={8}
-              className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
-              value={filters.chassi}
-              onChange={(event) => setFilters((prev) => ({ ...prev, chassi: event.target.value.toUpperCase() }))}
-              placeholder="ABC12345"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-xs font-semibold text-slate-600">Cliente</label>
-            <input
-              type="text"
-              className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
-              value={filters.customer}
-              onChange={(event) => setFilters((prev) => ({ ...prev, customer: event.target.value }))}
-              placeholder="Nome do cliente"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-xs font-semibold text-slate-600">DTC (código)</label>
-            <input
-              type="text"
-              className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
-              value={filters.dtc}
-              onChange={(event) => setFilters((prev) => ({ ...prev, dtc: event.target.value.toUpperCase() }))}
-              placeholder="P1234"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-xs font-semibold text-slate-600">Data do evento</label>
-            <input
-              type="date"
-              className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
-              value={filters.eventDate}
-              onChange={(event) => setFilters((prev) => ({ ...prev, eventDate: event.target.value }))}
-            />
-          </div>
-
-          <div className="mt-auto flex gap-2">
-            <button
-              type="submit"
-              className="inline-flex flex-1 items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Aplicar filtros
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
-            >
-              Limpar
-            </button>
-          </div>
-        </form>
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-      </section>
-
-      <section className="flex-1 min-h-0 overflow-hidden">
-        <div className="grid h-full min-h-0 grid-cols-1 gap-6 lg:grid-cols-[420px_minmax(0,1fr)]">
-          <div className="flex min-h-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between pb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Eventos recentes</h2>
-              {loading && <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Carregando...</span>}
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <form className="grid gap-4 md:grid-cols-5" onSubmit={handleSubmit}>
+            <div className="flex flex-col">
+              <label className="text-xs font-semibold text-slate-600">Chassi (últimos 8 dígitos)</label>
+              <input
+                type="text"
+                maxLength={8}
+                className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                value={filters.chassi}
+                onChange={(event) => setFilters((prev) => ({ ...prev, chassi: event.target.value.toUpperCase() }))}
+                placeholder="ABC12345"
+              />
             </div>
 
-            {items.length === 0 && !loading ? (
-              <p className="text-sm text-slate-500">Nenhum evento encontrado para os filtros informados.</p>
-            ) : (
-              <div className="relative -mr-1 flex-1 overflow-hidden">
-                <ul className="flex h-full flex-col gap-3 overflow-y-auto pr-1">
-                  {items.map((item) => (
-                    <li key={`${item.customer_name}-${item.chassi_last8}`}>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedItem(item)}
-                        className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:shadow"
-                      >
-                        <div className="flex items-center justify-between text-sm text-slate-600">
-                          <span className="font-semibold text-slate-900">{item.customer_name}</span>
-                          <span>{item.plate ? `Placa ${item.plate}` : ""}</span>
-                        </div>
-                        <div className="mt-2 flex items-center justify-between text-sm text-slate-600">
-                          <span>Chassi • {item.chassi_last8 || "-"}</span>
-                          <span>{item.dtc_count} DTC&apos;s</span>
-                        </div>
-                        <div className="mt-2 text-xs text-slate-500">Último evento: {formatDate(item.most_recent)}</div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <div className="flex min-h-0 flex-col rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
-            <div className="mb-3 flex items-center justify-between px-2">
-              <h2 className="text-lg font-semibold text-slate-900">Mapa de ocorrências</h2>
-              <span className="text-xs font-medium text-slate-500">{eventsWithCoords.length} pontos mapeados</span>
+            <div className="flex flex-col">
+              <label className="text-xs font-semibold text-slate-600">Cliente</label>
+              <input
+                type="text"
+                className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                value={filters.customer}
+                onChange={(event) => setFilters((prev) => ({ ...prev, customer: event.target.value }))}
+                placeholder="Nome do cliente"
+              />
             </div>
-            <div className="relative flex-1 overflow-hidden rounded-2xl border border-slate-100 bg-slate-100/40 shadow-inner">
-              <div ref={mapContainerRef} className="absolute inset-0" />
-              {mapError && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/80 text-sm text-red-600">
-                  {mapError}
+
+            <div className="flex flex-col">
+              <label className="text-xs font-semibold text-slate-600">DTC (código)</label>
+              <input
+                type="text"
+                className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                value={filters.dtc}
+                onChange={(event) => setFilters((prev) => ({ ...prev, dtc: event.target.value.toUpperCase() }))}
+                placeholder="P1234"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label className="text-xs font-semibold text-slate-600">Data do evento</label>
+              <input
+                type="date"
+                className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                value={filters.eventDate}
+                onChange={(event) => setFilters((prev) => ({ ...prev, eventDate: event.target.value }))}
+              />
+            </div>
+
+            <div className="mt-auto flex gap-2">
+              <button
+                type="submit"
+                className="inline-flex flex-1 items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
+                Aplicar filtros
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
+              >
+                Limpar
+              </button>
+            </div>
+          </form>
+          {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        </div>
+      </section>
+
+      <section className="flex-1 overflow-hidden px-6 pb-6">
+        <div className="h-full grid grid-rows-[40vh_1fr] gap-6 lg:grid-rows-none lg:grid-cols-[380px_1fr]">
+          <aside
+            id="recent-events"
+            className="h-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm"
+          >
+            <div className="flex h-full flex-col">
+              <div className="sticky top-0 z-10 border-b border-slate-200 bg-white px-4 py-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-slate-900">Eventos recentes</h2>
+                  {loading && (
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Carregando...</span>
+                  )}
                 </div>
-              )}
+              </div>
+
+              <div className="space-y-3 px-4 py-4">
+                {items.length === 0 && !loading ? (
+                  <p className="text-sm text-slate-500">Nenhum evento encontrado para os filtros informados.</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {items.map((item) => (
+                      <li key={`${item.customer_name}-${item.chassi_last8}`}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedItem(item)}
+                          className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:shadow"
+                        >
+                          <div className="flex items-center justify-between text-sm text-slate-600">
+                            <span className="font-semibold text-slate-900">{item.customer_name}</span>
+                            <span>{item.plate ? `Placa ${item.plate}` : ""}</span>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between text-sm text-slate-600">
+                            <span>Chassi • {item.chassi_last8 || "-"}</span>
+                            <span>{item.dtc_count} DTC&apos;s</span>
+                          </div>
+                          <div className="mt-2 text-xs text-slate-500">Último evento: {formatDate(item.most_recent)}</div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
-          </div>  
+          </aside>
+
+          <div
+            id="map-wrapper"
+            className="h-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+          >
+            <div className="flex h-full flex-col">
+              <div className="border-b border-slate-200 px-5 py-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-slate-900">Mapa de ocorrências</h2>
+                  <span className="text-xs font-medium text-slate-500">{eventsWithCoords.length} pontos mapeados</span>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-hidden p-4">
+                <div className="relative h-full w-full">
+                  <div id="map-container" ref={mapContainerRef} className="h-full w-full" />
+                  {mapError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 text-sm text-red-600">
+                      {mapError}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            </div>
+ 
         </div>
       </section>
 
