@@ -52,7 +52,7 @@ const cards = [
 
 export default function Overview() {
   return (
-    <div className="flex h-full flex-col overflow-auto bg-slate-100">
+    <div className="flex h-medium flex-col overflow-auto bg-slate-100">
       <section className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">DTC’s Insights</h1>
         <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 md:text-lg">
@@ -60,21 +60,21 @@ export default function Overview() {
         </p>
       </section>
 
-      <section className="mx-auto w-full max-w-screen-xl px-6 pb-16">
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+      <section className="mx-auto w-full max-w-screen-2xl px-8 pb-20">
+        <div className="grid gap-24 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => (
             <article
               key={card.title}
               className="flex h-full flex-col justify-between rounded-3xl bg-white p-8 shadow-md ring-1 ring-slate-200 transition-all hover:-translate-y-1 hover:shadow-xl"
             >
-              <div className="space-y-4">
+              <div className="space-y-8">
                 <header className="flex items-center gap-4">
                   <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#FFD73A]/80 text-2xl text-slate-900">
                     {card.icon}
                   </div>
                   <h2 className="text-xl font-semibold text-slate-900">{card.title}</h2>
                 </header>
-                <ul className="space-y-2 text-sm text-slate-600">
+                <ul className="space-y-4 text-sm text-slate-600">
                   {card.highlights.map((item) => (
                     <li key={item} className="flex gap-2 text-left">
                       <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-[#FFD73A]" aria-hidden />

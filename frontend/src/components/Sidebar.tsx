@@ -1,5 +1,6 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useSessionStore } from "../store/useSession";
 
 function IconHome(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -59,10 +60,11 @@ const NAV_ITEMS = [
   { to: "/visao-geral", label: "Visão geral", icon: IconCompass },
   { to: "/assistente", label: "Assistente", icon: IconBot },
   { to: "/relatorios", label: "Relatórios", icon: IconReport },
-  { to: "/login", label: "Login", icon: IconLogin },
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+  const { setUser, setToken } = useSessionStore();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -117,6 +119,16 @@ export default function Sidebar() {
 
   const toggle = () => setCollapsed((value) => !value);
   const close = () => setCollapsed(true);
+
+    const handleLoginClick = () => {
+    setUser(null);
+    setToken(null);
+    navigate("/login");
+
+    if (isMobile) {
+      close();
+    }
+  };
 
   const asideClasses = [
     "sidebar bg-white text-slate-700",
@@ -179,6 +191,22 @@ export default function Sidebar() {
             </NavLink>
           ))}
         </nav>
+
+                <div className="px-3 pb-4">
+          <button
+            type="button"
+            onClick={handleLoginClick}
+            className={[
+              "flex w-full items-center gap-3.5 rounded-2xl px-4 py-3 font-medium text-slate-700 transition-all hover:bg-[#FFD73A] hover:text-slate-900",
+              !isMobile && collapsed ? "justify-center" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            <IconLogin className="ico h-6 w-6 shrink-0" />
+            <span className={!isMobile && collapsed ? "sr-only" : ""}>Sair</span>
+          </button>
+        </div>
 
         <footer className="mt-auto px-4 py-4 text-center text-xs text-slate-400">v1.0</footer>
       </aside>

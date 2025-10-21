@@ -1,14 +1,12 @@
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import Sidebar from "./Sidebar";
 import api from "../lib/api";
-import { useSessionStore } from "../store/useSession";
 import logo from "../assets/logo-gobrax.png";
 
 export default function Shell() {
-  const navigate = useNavigate();
   const location = useLocation();
-  const { setUser, setToken } = useSessionStore();
+
 
   const titles: Record<string, string> = {
     "/": "Página inicial",
@@ -18,12 +16,6 @@ export default function Shell() {
   };
 
   const title = titles[location.pathname] ?? "dtc-insights";
-
-  function logout() {
-    setUser(null);
-    setToken(null);
-    navigate("/login");
-  }
 
   useEffect(() => {
     api
@@ -48,18 +40,10 @@ export default function Shell() {
           >
             ☰
           </button>
-          <img src={logo} alt="Logo Gobrax" className="h-10 object-contain" />
+          <img src={logo} alt="Logo Gobrax" className="h-11 object-contain" />
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="font-semibold text-slate-700">{title}</div>
-          <button
-            onClick={logout}
-            className="rounded-md bg-slate-800 px-3 py-2 text-sm text-white transition hover:bg-slate-900"
-          >
-            Sair
-          </button>
-        </div>
+        <div className="font-semibold text-slate-700">{title}</div>
       </header>
 
       <div

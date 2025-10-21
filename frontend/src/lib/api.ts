@@ -14,6 +14,7 @@ export class AssistantError extends Error {
 }
 
 const api = axios.create({
+  baseURL: BASE,
   headers: { "Content-Type": "application/json" },
 });
 
