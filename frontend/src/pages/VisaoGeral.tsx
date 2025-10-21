@@ -395,47 +395,65 @@ export default function VisaoGeral() {
       </section>
 
       {selectedItem && (
-        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/40 p-6">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">{selectedItem.customer_name}</h3>
-                <p className="text-sm text-slate-600">Chassi: {selectedItem.chassi_last8 || "-"}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedItem(null)}
-                className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
-              >
-                <span className="sr-only">Fechar</span>
-                ✕
-              </button>
-            </div>
-            <div className="max-h-[70vh] overflow-y-auto px-6 py-4">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="sticky top-0 bg-white text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="py-2 pr-3">Data</th>
-                    <th className="py-2 pr-3">Código</th>
-                    <th className="py-2 pr-3">Descrição</th>
-                    <th className="py-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedItem.events.map((event, index) => (
-                    <tr key={`${event.dtc}-${event.timestamp}-${index}`} className="border-t border-slate-100">
-                      <td className="py-2 pr-3">{formatDate(event.timestamp)}</td>
-                      <td className="py-2 pr-3 font-semibold text-slate-900">{event.dtc}</td>
-                      <td className="py-2 pr-3 text-xs text-slate-600">{event.dtc_description || "-"}</td>
-                      <td className="py-2 text-xs text-slate-500">{event.status || "-"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <EventoDetalhe item={selectedItem} onClose={() => setSelectedItem(null)} />
       )}
+    </div>
+  );
+}
+type EventoDetalheProps = {
+  item: OverviewItem;
+  onClose: () => void;
+};
+
+function EventoDetalhe({ item, onClose }: EventoDetalheProps) {
+  return (
+    <div className="fixed inset-0 z-[1200] flex justify-end">
+      <button
+        type="button"
+        aria-label="Fechar detalhes do evento"
+        className="fixed inset-0 bg-black/40"
+        onClick={onClose}
+      />
+
+      <aside className="relative z-40 flex h-screen w-full max-w-[720px] flex-col bg-white shadow-2xl">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-4 bg-white/95 px-4 py-3 shadow backdrop-blur supports-[backdrop-filter]:bg-white/70">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">{item.customer_name}</h2>
+            <p className="text-sm text-slate-600">Chassi: {item.chassi_last8 || "-"}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+            aria-label="Fechar"
+          >
+            ✕
+          </button>
+        </header>
+
+        <div className="flex-1 overflow-y-auto px-4 pb-6">
+          <table className="min-w-full text-left text-sm text-slate-600">
+            <thead className="sticky top-0 bg-white text-xs uppercase tracking-wide text-slate-500 shadow">
+              <tr>
+                <th className="py-2 pr-3">Data</th>
+                <th className="py-2 pr-3">Código</th>
+                <th className="py-2 pr-3">Descrição</th>
+                <th className="py-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {item.events.map((event, index) => (
+                <tr key={`${event.dtc}-${event.timestamp}-${index}`} className="border-t border-slate-100">
+                  <td className="py-2 pr-3">{formatDate(event.timestamp)}</td>
+                  <td className="py-2 pr-3 font-semibold text-slate-900">{event.dtc}</td>
+                  <td className="py-2 pr-3 text-xs text-slate-600">{event.dtc_description || "-"}</td>
+                  <td className="py-2 text-xs text-slate-500">{event.status || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </aside>
     </div>
   );
 }

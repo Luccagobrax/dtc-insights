@@ -10,11 +10,7 @@ export default function Shell() {
   const location = useLocation();
   const { setUser, setToken } = useSessionStore();
 
-    // rotas onde o sidebar deve sumir
-  const hideRailOn = new Set<string>(["/", "/assistente"]);
-  const hideRail = hideRailOn.has(location.pathname);
-
-   const titles: Record<string, string> = {
+  const titles: Record<string, string> = {
     "/": "Página inicial",
     "/visao-geral": "Visão geral",
     "/assistente": "Assistente IA",
@@ -30,17 +26,34 @@ export default function Shell() {
   }
 
   useEffect(() => {
-    api.get("/health").then(r => console.log("health:", r.data)).catch(console.error);
+    api
+      .get("/health")
+      .then((response) => console.log("health:", response.data))
+      .catch(console.error);
   }, []);
 
+    const openSidebar = () => {
+    window.dispatchEvent(new Event("sidebar-open"));
+  };
+
   return (
-<div className="h-screen w-screen overflow-hidden bg-[var(--app-bg)] text-[var(--app-fg)]">
-      <header className="h-[72px] border-b border-slate-200 bg-white/95 px-6 shadow-sm">
-        <div className="flex h-full items-center gap-4">
-          <div className="flex flex-1 justify-center">
-            <img src={logo} alt="Logo Gobrax" className="h-10 object-contain" />
-          </div>
-          <div className="font-semibold">{title}</div>
+    <div className="h-screen w-screen overflow-hidden bg-[var(--app-bg)] text-[var(--app-fg)]">
+      <header className="relative z-30 flex h-[72px] items-center gap-4 border-b border-slate-200 bg-white px-4 shadow-sm lg:px-6">
+        <button
+          type="button"
+          onClick={openSidebar}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 text-xl text-slate-600 transition hover:border-slate-300 hover:text-slate-900 lg:hidden"
+          aria-label="Abrir menu"
+        >
+          ☰
+        </button>
+
+        <div className="flex flex-1 items-center justify-center">
+          <img src={logo} alt="Logo Gobrax" className="h-10 object-contain" />
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="font-semibold text-slate-700">{title}</div>
           <button
             onClick={logout}
             className="rounded-md bg-slate-800 px-3 py-2 text-sm text-white transition hover:opacity-90"
@@ -50,11 +63,8 @@ export default function Shell() {
         </div>
       </header>
 
-      <div className="h-[calc(100vh-72px)] grid grid-cols-1 grid-rows-[auto_1fr] bg-[var(--app-bg)] lg:grid-cols-[316px_1fr] lg:grid-rows-1">
-        <aside className="h-full overflow-y-auto border-r border-slate-200 bg-white">
-          <Sidebar hideRail={hideRail} />
-        </aside>
-
+      <div className="h-[calc(100vh-72px)] grid grid-cols-1 bg-[var(--app-bg)] lg:grid-cols-[var(--sidebar-width,260px)_1fr]">
+        <Sidebar />
         <main id="app-main" className="h-full overflow-hidden bg-[var(--app-bg)]">
           <Outlet />
         </main>
