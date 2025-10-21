@@ -50,7 +50,7 @@
 }
 
 html, body, #root { height: 100%; }
-html, body { overflow: hidden; }
+html, body { overflow: auto; }  /* ou remova essa linha */
 body {
   background: var(--bg-platform);
   font-family: "Neometric", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
