@@ -102,8 +102,8 @@ body {
 }
 .sidebar .navlink.active {
   background: #eef2ff;
-  color: #3730a3;
-  font-weight: 600;
+  color: #FFD73A;
+  font-weight: 400;
 }
 
 .sidebar .ico {
