@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
-import api from "../lib/api";
+import { askAssistant } from "../lib/api";
 
 type Msg = { id: string; role: "user" | "assistant"; content: string };
 
@@ -12,34 +12,48 @@ export default function Assistente() {
         "Oi! Eu sou o Assistente DTC. Faça uma pergunta e, se quiser, informe Placa/IMEI/Chassi ao lado para contexto.",
     },
   ]);
-  const [input, setInput] = useState("");
-  const [entity, setEntity] = useState("");
+  const [msg, setMsg] = useState("");
+  const [plate, setPlate] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+    const addMessage = (message: Omit<Msg, "id">) => {
+    setMessages((prev) => [...prev, { ...message, id: crypto.randomUUID() }]);
+  };
+
+  const scrollToBottom = () => {
+    requestAnimationFrame(() => {
+      listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+    });
+  };
+
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+    scrollToBottom();
+  }, [messages, loading]);
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text) return;
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const prompt = msg.trim();
+    if (!prompt || loading) {
+      return;
+    }
 
-    setMessages(m => [...m, { id: crypto.randomUUID(), role: "user", content: text }]);
-    setInput("");
+    addMessage({ role: "user", content: prompt });
+    setMsg("");
+    setError(null);
     setLoading(true);
 
     try {
-    const { data } = await api.post("/chat", {
-   message: text,
-   vehicle_key: entity || undefined,
-   });
-    const answer = data?.reply ?? "Sem resposta no momento.";
-      setMessages(m => [...m, { id: crypto.randomUUID(), role: "assistant", content: answer }]);
+      const answer = await askAssistant({ prompt, plate: plate || undefined });
+      addMessage({ role: "assistant", content: answer });
     } catch (err) {
-      setMessages(m => [...m, { id: crypto.randomUUID(), role: "assistant", content: "Ops! Não consegui responder agora." }]);
       console.error(err);
+            if (err instanceof Error && err.message === "EMPTY_ANSWER") {
+        setError("Não recebi conteúdo do servidor.");
+      } else {
+        setError("Falha ao consultar o assistente.");
+      }
     } finally {
       setLoading(false);
     }
@@ -53,10 +67,10 @@ export default function Assistente() {
         </div>
 
         <div ref={listRef} className="chat-list">
-          {messages.map(m => (
-            <div key={m.id} className={`chat-msg ${m.role}`}>
+          {messages.map((message) => (
+            <div key={message.id} className={`chat-msg ${message.role}`}>
               <div className="avatar" aria-hidden />
-              <div className="bubble">{m.content}</div>
+              <div className="bubble">{message.content}</div>
             </div>
           ))}
           {loading && (
@@ -67,30 +81,37 @@ export default function Assistente() {
           )}
         </div>
 
-        <form className="composer" onSubmit={onSubmit}>
-          <label htmlFor="prompt" className="sr-only">Pergunte algo</label>
+        <form className="composer" onSubmit={handleSubmit}>
+          <label htmlFor="prompt" className="sr-only">
+            Pergunte algo
+          </label>
           <input
             id="prompt"
             className="gbx-input flex-1"
             placeholder="Pergunte algo…"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+            value={msg}
+            onChange={(event) => setMsg(event.target.value)}
             autoComplete="off"
           />
 
-          <label htmlFor="entity" className="sr-only">Placa / IMEI / Chassi</label>
+          <label htmlFor="plate" className="sr-only">
+            Placa / IMEI / Chassi
+          </label>
           <input
-            id="entity"
+            id="plate"
             className="gbx-input w-48"
             placeholder="Placa / Chassi"
-            value={entity}
-            onChange={(e) => setEntity(e.target.value)}
+            value={plate}
+            onChange={(event) => setPlate(event.target.value)}
             autoComplete="off"
           />
 
-          <button className="gbx-btn" type="submit" disabled={loading || !input.trim()}>
+          <button className="gbx-btn" type="submit" disabled={loading || !msg.trim()}>
             {loading ? "Enviando…" : "Enviar"}
           </button>
+          {error && (
+            <p className="basis-full pt-1 text-sm text-red-600">{error}</p>
+          )}
         </form>
       </div>
     </div>
