@@ -1,36 +1,67 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
-const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const rawBase = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const BASE = rawBase.replace(/\/$/, "");
+
+export class AssistantError extends Error {
+  code?: string;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.name = "AssistantError";
+    this.code = code;
+  }
+}
 
 const api = axios.create({
-  baseURL: BASE,
+  headers: { "Content-Type": "application/json" },
 });
 
-export async function askAssistant(payload: { prompt: string; plate?: string }) {
-  const res = await fetch(`${BASE}/assistant/ask`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+type AskPayload = { prompt: string; plate?: string };
 
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
+export async function askAssistant(payload: AskPayload) {
+  const body: AskPayload = {
+    ...payload,
+    prompt: payload.prompt.trim(),
+  };
+
+  if (!body.prompt) {
+    throw new AssistantError("Escreva uma pergunta antes de enviar.", "EMPTY_PROMPT");
   }
 
-  let data: any = null;
   try {
-    data = await res.json();
-  } catch {
-    // response might not be JSON
+    const res = await api.post("/assistant/ask", body);
+    const data = res.data ?? {};
+    const answer = data?.answer ?? data?.message ?? data ?? "";
+    const text = typeof answer === "string" ? answer.trim() : String(answer ?? "").trim();
+
+    if (!text) {
+      throw new AssistantError("Não recebi conteúdo do servidor.", "EMPTY_ANSWER");
+    }
+
+    return text;
+  } catch (error) {
+    if (error instanceof AssistantError) {
+      throw error;
+    }
+
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError<any>;
+      const status = axiosError.response?.status;
+      const detail =
+        axiosError.response?.data?.detail ??
+        axiosError.response?.data?.message ??
+        axiosError.response?.data?.error;
+      const message =
+        typeof detail === "string" && detail.trim()
+          ? detail.trim()
+          : "Não foi possível consultar o assistente no momento.";
+      const code = status ? `HTTP_${status}` : "NETWORK_ERROR";
+      throw new AssistantError(message, code);
+    }
+
+    throw new AssistantError("Não foi possível consultar o assistente no momento.");
   }
-
-  const answer = data?.answer ?? data ?? "";
-
-  if (!answer || !String(answer).trim()) {
-    throw new Error("EMPTY_ANSWER");
-  }
-
-  return String(answer);
 }
 
 export default api;

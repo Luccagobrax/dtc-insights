@@ -10,7 +10,7 @@ const cards = [
       "Mapa interativo com ocorrências",
     ],
     icon: "🧭",
-    cta: "Acessar →",
+    cta: "Ir para visão geral",
   },
   {
     to: "/assistente",
@@ -20,13 +20,12 @@ const cards = [
       "Envie contexto adicional para refinar as respostas",
       "Receba insights valiosos em poucos cliques",
     ],
-    icon: "📊",
-    cta: "Explorar →",
+    icon: "🤖",
+    cta: "Falar com o assistente",
   },
   {
     to: "/relatorios",
     title: "Relatórios Dinâmicos",
-    description: "Acompanhe indicadores, exporte dados e gere análises personalizadas.",
     highlights: [
       "Monitore KPIs operacionais em tempo real",
       "Gere comparativos por período e categoria",
@@ -47,41 +46,49 @@ const cards = [
         <path d="M20 20V8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
+    cta: "Abrir relatórios",
   },
 ];
 
 export default function Overview() {
   return (
-    <div className="min-h-[calc(100vh-72px)] overflow-auto bg-slate-100">
-      <section className="mx-auto max-w-screen-xl px-6 pt-10 pb-6 text-center">
+    <div className="flex h-full flex-col overflow-auto bg-slate-100">
+      <section className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">DTC’s Insights</h1>
-        <p className="mx-auto mt-3 max-w-3xl text-base text-slate-600 md:text-lg">
-          Aqui você encontra os principais atalhos para navegar pela plataforma DTC Insights. Explore os recursos abaixo para
-          acelerar suas análises com uma experiência guiada e intuitiva.
+        <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 md:text-lg">
+          Explore análises inteligentes, acompanhe indicadores e mergulhe nos dados dos veículos com poucos cliques.
         </p>
       </section>
 
-      <section className="mx-auto max-w-screen-xl px-6 pb-12">
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <section className="mx-auto w-full max-w-screen-xl px-6 pb-16">
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => (
             <article
               key={card.title}
-              className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-shadow hover:shadow-md"
+              className="flex h-full flex-col justify-between rounded-3xl bg-white p-8 shadow-md ring-1 ring-slate-200 transition-all hover:-translate-y-1 hover:shadow-xl"
             >
-              <header className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-50 text-lg text-indigo-700">
-                  {card.icon}
-                </div>
-                <h2 className="text-xl font-semibold text-slate-900">{card.title}</h2>
-              </header>
-              <ul className="mt-4 space-y-1 text-sm text-slate-600 list-disc list-inside">
-                {card.highlights.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
+              <div className="space-y-4">
+                <header className="flex items-center gap-4">
+                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#FFD73A]/80 text-2xl text-slate-900">
+                    {card.icon}
+                  </div>
+                  <h2 className="text-xl font-semibold text-slate-900">{card.title}</h2>
+                </header>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  {card.highlights.map((item) => (
+                    <li key={item} className="flex gap-2 text-left">
+                      <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-[#FFD73A]" aria-hidden />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-              <div className="mt-4">
-                <NavLink to={card.to} className="inline-flex items-center gap-2 text-indigo-700 hover:underline">
+              <div className="mt-8 flex items-center justify-start">
+                <NavLink
+                  to={card.to}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FFD73A] px-6 py-3 text-base font-semibold text-slate-900 transition hover:brightness-95 md:w-auto"
+                >
                   {card.cta}
                 </NavLink>
               </div>

@@ -121,6 +121,7 @@ export default function Sidebar() {
   const asideClasses = [
     "sidebar bg-white text-slate-700",
     "flex h-full min-h-0 flex-col border-r border-slate-200",
+    "shadow-sm",
     "transition-[width,transform] duration-300 ease-out",
     isMobile
       ? "fixed left-0 top-[72px] z-30 h-[calc(100vh-72px)] w-[260px] shadow-xl"
@@ -135,22 +136,26 @@ export default function Sidebar() {
   return (
     <>
       <aside className={asideClasses}>
-        <div className="flex items-center justify-between px-3 py-3">
+        <div className="flex items-center gap-3 px-4 py-4">
           <button
             onClick={toggle}
             aria-label="Alternar menu"
             aria-expanded={!collapsed}
-            className="rounded-md border border-slate-200 px-2 py-1 text-sm text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
           >
             ☰
           </button>
-          <div className={`${!isMobile && collapsed ? "sr-only" : ""} flex-1 text-center font-semibold tracking-wide text-slate-900`}>
+          <div
+            className={[
+              "flex-1 text-left text-lg font-semibold tracking-wide text-slate-900",
+              !isMobile && collapsed ? "sr-only" : "",
+            ].join(" ")}
+          >
             dtc-insights
           </div>
-          <div className="w-[30px]" aria-hidden />
         </div>
 
-        <nav className="mt-2 flex flex-1 flex-col gap-1 overflow-y-auto pb-6">
+        <nav className="mt-2 flex flex-1 flex-col gap-2 overflow-y-auto pb-6">
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -158,14 +163,18 @@ export default function Sidebar() {
               end={end}
               className={({ isActive }) =>
                 [
-                  "navlink flex items-center gap-3 rounded-xl px-3 py-2.5 mx-2",
-                  "transition-colors",
-                  isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-700 hover:bg-slate-100",
-                ].join(" ")
+                  "navlink mx-3 flex items-center gap-3.5 rounded-2xl px-4 py-3 font-medium transition-all",
+                  !isMobile && collapsed ? "justify-center" : "",
+                  isActive
+                    ? "bg-[#FFD73A] text-slate-900 shadow-sm"
+                    : "text-slate-700 hover:bg-[#FFD73A] hover:text-slate-900",
+                ]
+                  .filter(Boolean)
+                  .join(" ")
               }
               onClick={isMobile ? close : undefined}
             >
-              <Icon className="ico h-5 w-5 shrink-0" />
+              <Icon className="ico h-6 w-6 shrink-0" />
               <span className={!isMobile && collapsed ? "sr-only" : ""}>{label}</span>
             </NavLink>
           ))}

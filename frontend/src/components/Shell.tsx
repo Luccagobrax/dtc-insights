@@ -32,7 +32,7 @@ export default function Shell() {
       .catch(console.error);
   }, []);
 
- const openSidebar = () => {
+  const openSidebar = () => {
     window.dispatchEvent(new Event("sidebar-open"));
   };
 
@@ -62,7 +62,10 @@ export default function Shell() {
         </div>
       </header>
 
-      <div className="h-[calc(100vh-72px)] grid grid-cols-[auto_1fr]">
+      <div
+        className="grid h-[calc(100vh-72px)]"
+        style={{ gridTemplateColumns: "var(--sidebar-width, 260px) 1fr" }}
+      >
         <Sidebar />
         <main className="h-full overflow-auto bg-slate-100">
           <Outlet />

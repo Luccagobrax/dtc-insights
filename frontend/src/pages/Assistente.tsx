@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { askAssistant } from "../lib/api";
+import { AssistantError, askAssistant } from "../lib/api";
 
 type Msg = { id: string; role: "user" | "assistant"; content: string };
 
@@ -18,7 +18,7 @@ export default function Assistente() {
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-    const addMessage = (message: Omit<Msg, "id">) => {
+  const addMessage = (message: Omit<Msg, "id">) => {
     setMessages((prev) => [...prev, { ...message, id: crypto.randomUUID() }]);
   };
 
@@ -49,7 +49,9 @@ export default function Assistente() {
       addMessage({ role: "assistant", content: answer });
     } catch (err) {
       console.error(err);
-            if (err instanceof Error && err.message === "EMPTY_ANSWER") {
+      if (err instanceof AssistantError) {
+        setError(err.message);
+      } else if (err instanceof Error && err.message === "EMPTY_ANSWER") {
         setError("Não recebi conteúdo do servidor.");
       } else {
         setError("Falha ao consultar o assistente.");
