@@ -7,7 +7,6 @@ import logo from "../assets/logo-gobrax.png";
 export default function Shell() {
   const location = useLocation();
 
-
   const titles: Record<string, string> = {
     "/": "Página inicial",
     "/visao-geral": "Visão geral",
@@ -16,6 +15,7 @@ export default function Shell() {
   };
 
   const title = titles[location.pathname] ?? "dtc-insights";
+  const hasSidebar = location.pathname !== "/";
 
   useEffect(() => {
     api
@@ -29,33 +29,44 @@ export default function Shell() {
   };
 
   return (
-        <div className="h-screen w-screen overflow-hidden bg-slate-100 text-slate-900">
-    <header className="relative flex h-[72px] items-center justify-between border-b border-slate-200 bg-white px-6">
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={openSidebar}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 text-xl text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 lg:hidden"
-          aria-label="Abrir menu"
-        >
-          ☰
-        </button>
-      </div>
-      <img
-        src={logo}
-        alt="Logo Gobrax"
-        className="absolute left-1/2 top-1/2 h-12 -translate-x-1/2 -translate-y-1/2 object-contain"
-      />
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-slate-100 text-slate-900">
+      <header
+        className={`relative flex h-[72px] items-center border-b border-slate-200 bg-white px-6 ${
+          hasSidebar ? "justify-between" : "justify-center"
+        }`}
+      >
+        {hasSidebar ? (
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={openSidebar}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 text-xl text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 lg:hidden"
+              aria-label="Abrir menu"
+            >
+              ☰
+            </button>
+          </div>
+        ) : null}
+        <img
+          src={logo}
+          alt="Logo Gobrax"
+          className={[
+            "h-12 object-contain",
+            hasSidebar ? "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" : "",
+          ].join(" ")}
+        />
 
-      <div className="font-semibold text-slate-700">{title}</div>
-    </header>
+        {hasSidebar ? (
+          <div className="font-semibold text-slate-700">{title}</div>
+        ) : null}
+      </header>
 
       <div
-        className="grid h-[calc(100vh-72px)]"
-        style={{ gridTemplateColumns: "var(--sidebar-width, 260px) 1fr" }}
+        className={hasSidebar ? "grid min-h-0 flex-1" : "flex min-h-0 flex-1"}
+        style={hasSidebar ? { gridTemplateColumns: "var(--sidebar-width, 260px) 1fr" } : undefined}
       >
-        <Sidebar />
-        <main className="h-full overflow-auto bg-slate-100">
+        {hasSidebar ? <Sidebar /> : null}
+        <main className="relative flex min-h-0 flex-col overflow-hidden bg-slate-100">
           <Outlet />
         </main>
       </div>

@@ -62,13 +62,13 @@ export default function Assistente() {
   }
 
   return (
-    <div className="assistente-wrap">
-      <div className="chat-card">
-        <div className="chat-header">
+    <section className="assistente-wrap">
+      <div className="chat-surface">
+        <header className="chat-header">
           <div className="chat-title">Assistente DTC</div>
-        </div>
+        </header>
 
-        <div ref={listRef} className="chat-list">
+        <div ref={listRef} className="chat-body">
           {messages.map((message) => (
             <div key={message.id} className={`chat-msg ${message.role}`}>
               <div className="avatar" aria-hidden />
@@ -83,7 +83,7 @@ export default function Assistente() {
           )}
         </div>
 
-        <form className="composer" onSubmit={handleSubmit}>
+        <form className="chat-composer" onSubmit={handleSubmit}>
           <label htmlFor="prompt" className="sr-only">
             Pergunte algo
           </label>
@@ -116,6 +116,6 @@ export default function Assistente() {
           )}
         </form>
       </div>
-    </div>
+    </section>
   );
 }
