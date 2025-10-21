@@ -69,7 +69,7 @@ export default function Overview() {
             >
               <div className="space-y-8">
                 <header className="flex items-center gap-4">
-                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#FFD73A]/80 text-2xl text-slate-900">
+                  <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#FFD31C]/80 text-2xl text-slate-900">
                     {card.icon}
                   </div>
                   <h2 className="text-xl font-semibold text-slate-900">{card.title}</h2>
@@ -77,7 +77,7 @@ export default function Overview() {
                 <ul className="space-y-4 text-sm text-slate-600">
                   {card.highlights.map((item) => (
                     <li key={item} className="flex gap-2 text-left">
-                      <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-[#FFD73A]" aria-hidden />
+                      <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-[#FFD31C]" aria-hidden />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -87,7 +87,7 @@ export default function Overview() {
               <div className="mt-8 flex items-center justify-start">
                 <NavLink
                   to={card.to}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FFD73A] px-6 py-3 text-base font-semibold text-slate-900 transition hover:brightness-95 md:w-auto"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FFD31C] px-6 py-3 text-base font-semibold text-slate-900 transition hover:brightness-95 md:w-auto"
                 >
                   {card.cta}
                 </NavLink>

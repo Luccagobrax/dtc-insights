@@ -178,8 +178,8 @@ export default function Sidebar() {
                   "navlink mx-3 flex items-center gap-3.5 rounded-2xl px-4 py-3 font-medium transition-all",
                   !isMobile && collapsed ? "justify-center" : "",
                   isActive
-                    ? "bg-[#FFD73A] text-slate-900 shadow-sm"
-                    : "text-slate-700 hover:bg-[#FFD73A] hover:text-slate-900",
+                    ? "bg-[#FFD31C] text-slate-900 shadow-sm"
+                    : "text-slate-700 hover:bg-[#FFD31C] hover:text-slate-900",
                 ]
                   .filter(Boolean)
                   .join(" ")
@@ -197,7 +197,7 @@ export default function Sidebar() {
             type="button"
             onClick={handleLoginClick}
             className={[
-              "flex w-full items-center gap-3.5 rounded-2xl px-4 py-3 font-medium text-slate-700 transition-all hover:bg-[#FFD73A] hover:text-slate-900",
+              "flex w-full items-center gap-3.5 rounded-2xl px-4 py-3 font-medium text-slate-700 transition-all hover:bg-[#FFD31C] hover:text-slate-900",
               !isMobile && collapsed ? "justify-center" : "",
             ]
               .filter(Boolean)
