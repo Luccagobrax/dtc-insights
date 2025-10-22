@@ -193,7 +193,7 @@ function formatVehicleLabel(row: HistoryEvent) {
 }
 
 const KPI_CARD_BASE_CLASSES =
-  "flex h-full min-h-[280px] sm:min-h-[300px] md:min-h-[400px] lg:min-h-[480px] xl:min-h-[520px] flex-col justify-between rounded-3xl border bg-white p-6 shadow-sm";
+  "flex h-[320px] flex-none min-h-0 flex-col justify-between rounded-3xl border bg-white p-6 shadow-sm md:h-[400px] lg:h-[480px] xl:h-[480px]";
 
 function TrendKPI({
   currentTotal,
@@ -224,7 +224,7 @@ function TrendKPI({
 
   if (error) {
     return (
-      <div className="flex h-full flex-col justify-between rounded-3xl border border-red-200 bg-white p-6 shadow-sm">
+      <div className={`${KPI_CARD_BASE_CLASSES} border-red-200`}>
         <div>
           <h2 className="text-base font-semibold text-slate-900">Tendência de eventos</h2>
           <p className="mt-2 text-sm text-red-600">{error}</p>
@@ -259,7 +259,7 @@ function TrendKPI({
 }
 
 const CHART_CARD_BASE_CLASSES =
-  "flex h-full min-h-[300px] sm:min-h-[320px] md:min-h-[400px] lg:min-h-[480px] xl:min-h-[520px] flex-col rounded-3xl border bg-white p-6 shadow-sm";
+  "flex h-[320px] flex-none min-h-0 min-w-0 flex-col rounded-3xl border bg-white p-6 shadow-sm md:h-[400px] lg:h-[480px] xl:h-[480px]";
 
 function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: boolean; error: string | null }) {
   if (loading) {
@@ -290,12 +290,14 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
   }
 
   const maxValue = data.reduce((max, point) => (point.count > max ? point.count : max), 0);
-  const viewBoxWidth = Math.max(300, data.length * 40);
+  const rawWidth = data.length * 40;
+  const viewBoxWidth = Math.min(1600, Math.max(600, rawWidth));
   const viewBoxHeight = 400;
   const horizontalPadding = 24;
   const verticalPadding = 32;
   const usableWidth = viewBoxWidth - horizontalPadding * 2;
   const usableHeight = viewBoxHeight - verticalPadding * 2;
+  const enableHorizontalScroll = rawWidth > 960;
 
   const points = data.map((point, index) => {
     const x = horizontalPadding + (data.length > 1 ? (usableWidth * index) / (data.length - 1) : usableWidth / 2);
@@ -309,15 +311,23 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
   return (
     <div className={`${CHART_CARD_BASE_CLASSES} border-slate-200`}>
       <h2 className="text-base font-semibold text-slate-900">Eventos por dia</h2>
-      <div className="mt-4 flex-1 overflow-hidden">
-        <div className="h-full w-full overflow-x-auto">
-          <svg
-            viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
-            role="img"
-            aria-label="Série temporal de eventos"
-            width={viewBoxWidth}
-            className="h-full min-w-full"
+      <div className="mt-4 flex-1 min-h-0 overflow-hidden">
+        <div
+          className={`h-full w-full ${enableHorizontalScroll ? "overflow-x-auto" : "overflow-hidden"}`}
+        >
+          <div
+            className="h-full"
+            style={{ minWidth: enableHorizontalScroll ? `${viewBoxWidth}px` : "100%" }}
           >
+                        <svg
+              viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+              role="img"
+              aria-label="Série temporal de eventos"
+              width="100%"
+              height="100%"
+              preserveAspectRatio="none"
+              className="h-full w-full"
+            >
             <defs>
               <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="rgba(79, 70, 229, 0.35)" />
@@ -388,7 +398,8 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
                 </g>
               );
             })}
-          </svg>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
@@ -557,7 +568,7 @@ export default function Historico() {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <form
-            className="grid auto-rows-fr gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] xl:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]"
+            className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]"
             onSubmit={handleSubmit}
           >
             <div className="flex flex-col">
@@ -614,7 +625,7 @@ export default function Historico() {
               />
             </div>
 
-            <div className="mt-auto flex flex-wrap items-center gap-2 sm:col-span-2 md:col-span-3 lg:col-span-2 xl:col-span-2">
+            <div className="mt-auto flex flex-wrap items-center gap-2 sm:col-span-2 md:col-span-3 lg:col-span-1">
               <button
                 type="submit"
                 className="inline-flex h-11 flex-1 items-center justify-center rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
@@ -637,7 +648,7 @@ export default function Historico() {
 
       <section className="flex-1 min-h-0 overflow-hidden px-6 pb-6">
         <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
-          <div className="grid flex-shrink-0 gap-6 lg:grid-cols-[clamp(280px,32%,320px)_minmax(0,1fr)] xl:grid-cols-[clamp(300px,28%,360px)_minmax(0,1fr)]">
+          <div className="grid flex-none min-h-0 gap-6 md:grid-cols-[clamp(280px,30%,340px)_minmax(0,1fr)] lg:grid-cols-[clamp(300px,28%,360px)_minmax(0,1fr)]">
             <TrendKPI currentTotal={currentTotal} previousTotal={previousTotal} loading={kpiLoading} error={kpiError} />
             <EventsChart data={series} loading={dailyLoading} error={dailyError} />
           </div>
