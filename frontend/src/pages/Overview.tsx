@@ -24,12 +24,12 @@ const cards = [
     cta: "Falar com o assistente",
   },
   {
-    to: "/relatorios",
-    title: "Relatórios Dinâmicos",
+    to: "/historico",
+    title: "Histórico de eventos",
     highlights: [
-      "Monitore KPIs operacionais em tempo real",
-      "Gere comparativos por período e categoria",
-      "Exporte dashboards para apresentações executivas",
+      "Filtros avançados por chassi, cliente, DTC e período",
+      "Acompanhe tendências diárias e totais por intervalo",
+      "Exporte os resultados filtrados para CSV",
     ],
     icon: (
       <svg
@@ -46,7 +46,7 @@ const cards = [
         <path d="M20 20V8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
-    cta: "Abrir relatórios",
+    cta: "Abrir histórico",
   },
 ];
 

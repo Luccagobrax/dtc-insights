@@ -59,7 +59,7 @@ const NAV_ITEMS = [
   { to: "/", label: "Página Inicial", icon: IconHome, end: true },
   { to: "/visao-geral", label: "Visão geral", icon: IconCompass },
   { to: "/assistente", label: "Assistente", icon: IconBot },
-  { to: "/relatorios", label: "Relatórios", icon: IconReport },
+  { to: "/historico", label: "Histórico", icon: IconReport },
 ];
 
 export default function Sidebar() {

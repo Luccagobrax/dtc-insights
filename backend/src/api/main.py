@@ -73,6 +73,51 @@ def overview_events(
     )
     return {"items": items}
 
+@app.get("/history/daily")
+def history_daily(
+    chassi: str | None = None,
+    customer: str | None = None,
+    dtc: str | None = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
+    days: int = 7,
+):
+    return bq_client.get_history_daily_counts(
+        chassi_last8=chassi,
+        customer=customer,
+        dtc=dtc,
+        start_date=start_date,
+        end_date=end_date,
+        default_days=max(1, days),
+    )
+
+
+@app.get("/history/events")
+def history_events(
+    chassi: str | None = None,
+    customer: str | None = None,
+    dtc: str | None = None,
+    start_date: date | None = None,
+    end_date: date | None = None,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+    days: int = 7,
+):
+    safe_page = max(1, page)
+    safe_page_size = max(1, min(page_size, 200))
+    return bq_client.get_history_events(
+        chassi_last8=chassi,
+        customer=customer,
+        dtc=dtc,
+        start_date=start_date,
+        end_date=end_date,
+        page=safe_page,
+        page_size=safe_page_size,
+        order=order,
+        default_days=max(1, days),
+    )
+
 @app.get("/", include_in_schema=False)
 def root():
     return RedirectResponse(url="/docs")

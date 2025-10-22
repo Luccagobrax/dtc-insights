@@ -1,7 +1,7 @@
-# backend/src/services/bq_client.py
+import math
 import re
 from datetime import date, datetime, time, timedelta, timezone
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 from google.cloud import bigquery
 from . import config  # <-- troquei: import relativo em vez de backend.src.services
@@ -390,6 +390,307 @@ def get_overview_events(
 
     items.sort(key=lambda item: item.get("most_recent") or "", reverse=True)
     return items
+
+
+def _resolve_history_dates(
+    start_date: Optional[date],
+    end_date: Optional[date],
+    default_days: int = 7,
+) -> Tuple[date, date, datetime, datetime]:
+    today = datetime.now(timezone.utc).date()
+
+    if start_date and end_date and end_date < start_date:
+        start_date, end_date = end_date, start_date
+    elif start_date and not end_date:
+        end_date = start_date
+    elif end_date and not start_date:
+        start_date = end_date
+    elif not start_date and not end_date:
+        end_date = today
+        start_date = end_date - timedelta(days=default_days - 1)
+
+    assert start_date is not None
+    assert end_date is not None
+
+    start_dt = datetime.combine(start_date, time.min, tzinfo=timezone.utc)
+    end_dt = datetime.combine(end_date + timedelta(days=1), time.min, tzinfo=timezone.utc)
+    return start_date, end_date, start_dt, end_dt
+
+
+def _history_filters(
+    chassi_last8: Optional[str],
+    customer: Optional[str],
+    dtc: Optional[str],
+    start_date: Optional[date],
+    end_date: Optional[date],
+    default_days: int = 7,
+) -> Tuple[str, List[bigquery.ScalarQueryParameter], date, date]:
+    resolved_start, resolved_end, start_dt, end_dt = _resolve_history_dates(start_date, end_date, default_days)
+
+    chassi_key = (chassi_last8 or "").strip().upper()
+    customer_key = (customer or "").strip().lower()
+    dtc_key = (dtc or "").strip().upper()
+
+    filters = ["tf.ts >= @date_start", "tf.ts < @date_end"]
+    params: List[bigquery.ScalarQueryParameter] = [
+        bigquery.ScalarQueryParameter("date_start", "TIMESTAMP", start_dt),
+        bigquery.ScalarQueryParameter("date_end", "TIMESTAMP", end_dt),
+    ]
+
+    if chassi_key:
+        filters.append("tf.chassi_last8 = @chassi")
+        params.append(bigquery.ScalarQueryParameter("chassi", "STRING", chassi_key))
+
+    if customer_key:
+        filters.append("LOWER(tf.customer_name) LIKE @customer")
+        params.append(bigquery.ScalarQueryParameter("customer", "STRING", f"%{customer_key}%"))
+
+    if dtc_key:
+        filters.append("tf.dtc = @dtc")
+        params.append(bigquery.ScalarQueryParameter("dtc", "STRING", dtc_key))
+
+    where_clause = " AND ".join(["TRUE"] + filters)
+    return where_clause, params, resolved_start, resolved_end
+
+
+def _history_base_cte(where_clause: str) -> str:
+    return f"""
+    WITH dtc_raw AS (
+      SELECT
+        t.event_datetime_utc                       AS ts,
+        UPPER(CAST(t.DTC AS STRING))               AS dtc,
+        SAFE_CAST(t.spn AS INT64)                  AS spn,
+        SAFE_CAST(t.fmi AS INT64)                  AS fmi,
+        t.status, t.lat, t.lon,
+        UPPER(CAST(t.imeis AS STRING))             AS imeis
+      FROM `{TBL_TELEMETRY}` t
+      WHERE t.event_datetime_utc >= @date_start
+    ),
+    dtc_norm AS (
+      SELECT
+        r.ts, r.dtc, r.spn, r.fmi, r.status, r.lat, r.lon,
+        TRIM(imei) AS imei_norm
+      FROM dtc_raw r,
+      UNNEST(SPLIT(REGEXP_REPLACE(r.imeis, r'[;,\\s]+', ','), ',')) AS imei
+    ),
+    dev AS (
+      SELECT d.device_id, UPPER(CAST(d.identification AS STRING)) AS imei
+      FROM `{TBL_DEVICES}` d
+    ),
+    inst AS (
+      SELECT i.device_id, i.vehicle_id, CAST(i.start_date AS TIMESTAMP) AS start_ts
+      FROM `{TBL_INSTALLS}` i
+    ),
+    veh AS (
+      SELECT
+        v.vehicle_id,
+        UPPER(v.plate)                             AS plate,
+        UPPER(CAST(v.chassi AS STRING))           AS chassi,
+        RIGHT(UPPER(CAST(v.chassi AS STRING)), 8) AS chassi_last8,
+        v.customer_id,
+        v.customer_name
+      FROM `{TBL_VEHICLES}` v
+    ),
+    t_dev AS (
+      SELECT n.*, d.device_id
+      FROM dtc_norm n
+      JOIN dev d ON UPPER(n.imei_norm) = d.imei
+    ),
+    t_dev_inst AS (
+      SELECT td.*, iv.vehicle_id
+      FROM t_dev td
+      JOIN inst iv
+        ON iv.device_id = td.device_id
+       AND td.ts >= iv.start_ts
+    ),
+    t_full AS (
+      SELECT
+        tdi.ts,
+        tdi.dtc,
+        tdi.spn,
+        tdi.fmi,
+        tdi.status,
+        tdi.lat,
+        tdi.lon,
+        tdi.imei_norm,
+        v.plate,
+        v.customer_id,
+        v.customer_name,
+        v.chassi,
+        v.chassi_last8
+      FROM t_dev_inst tdi
+      JOIN veh v ON v.vehicle_id = tdi.vehicle_id
+    ),
+    history_base AS (
+      SELECT
+        tf.ts,
+        tf.dtc,
+        tf.spn,
+        tf.fmi,
+        tf.status,
+        tf.lat,
+        tf.lon,
+        tf.customer_name,
+        tf.chassi,
+        tf.chassi_last8,
+        tf.plate,
+        tf.imei_norm AS imei,
+        dc.Description AS dtc_description
+      FROM t_full tf
+      JOIN `{TBL_DTC_CODES}` dc ON UPPER(dc.DTC) = tf.dtc
+      WHERE {where_clause}
+    )
+    """
+
+
+def get_history_daily_counts(
+    chassi_last8: Optional[str] = None,
+    customer: Optional[str] = None,
+    dtc: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    default_days: int = 7,
+) -> Dict:
+    where_clause, params, resolved_start, resolved_end = _history_filters(
+        chassi_last8, customer, dtc, start_date, end_date, default_days
+    )
+
+    sql = f"""
+    {_history_base_cte(where_clause)}
+    , daily_dtc AS (
+      SELECT
+        DATE(ts) AS event_date,
+        dtc,
+        COUNT(*) AS count
+      FROM history_base
+      GROUP BY event_date, dtc
+    )
+    SELECT
+      event_date,
+      SUM(count) AS total_count,
+      ARRAY_AGG(STRUCT(dtc, count) ORDER BY count DESC) AS breakdown
+    FROM daily_dtc
+    GROUP BY event_date
+    ORDER BY event_date
+    """
+
+    job = _client.query(sql, job_config=bigquery.QueryJobConfig(query_parameters=params))
+    rows = [dict(r) for r in job.result()]
+
+    points: List[Dict] = []
+    for row in rows:
+        event_date_value: Optional[date] = row.get("event_date")
+        breakdown_raw = row.get("breakdown") or []
+        points.append(
+            {
+                "event_date": event_date_value.isoformat() if isinstance(event_date_value, (date, datetime)) else None,
+                "total_count": int(row.get("total_count") or 0),
+                "breakdown": [
+                    {"dtc": item.get("dtc"), "count": int(item.get("count") or 0)}
+                    for item in breakdown_raw
+                ],
+            }
+        )
+
+    return {
+        "start_date": resolved_start.isoformat(),
+        "end_date": resolved_end.isoformat(),
+        "points": [point for point in points if point.get("event_date")],
+    }
+
+
+def get_history_events(
+    chassi_last8: Optional[str] = None,
+    customer: Optional[str] = None,
+    dtc: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    page: int = 1,
+    page_size: int = 25,
+    order: str = "desc",
+    default_days: int = 7,
+) -> Dict:
+    page = max(1, page)
+    page_size = max(1, min(page_size, 200))
+    order_direction = "DESC" if str(order).lower() != "asc" else "ASC"
+    offset = (page - 1) * page_size
+
+    where_clause, params, resolved_start, resolved_end = _history_filters(
+        chassi_last8, customer, dtc, start_date, end_date, default_days
+    )
+
+    params = list(params)  # copy to avoid mutating original
+    params.append(bigquery.ScalarQueryParameter("offset", "INT64", offset))
+    params.append(bigquery.ScalarQueryParameter("limit", "INT64", page_size))
+
+    sql = f"""
+    {_history_base_cte(where_clause)}
+    , numbered AS (
+      SELECT
+        ts,
+        dtc,
+        dtc_description,
+        status,
+        customer_name,
+        chassi,
+        chassi_last8,
+        plate,
+        COUNT(*) OVER() AS total_count,
+        ROW_NUMBER() OVER (ORDER BY ts {order_direction}) AS row_number
+      FROM history_base
+    )
+    SELECT
+      ts,
+      dtc,
+      dtc_description,
+      status,
+      customer_name,
+      chassi,
+      chassi_last8,
+      plate,
+      total_count,
+      row_number
+    FROM numbered
+    WHERE row_number > @offset AND row_number <= @offset + @limit
+    ORDER BY row_number
+    """
+
+    job = _client.query(sql, job_config=bigquery.QueryJobConfig(query_parameters=params))
+    rows = [dict(r) for r in job.result()]
+
+    items: List[Dict] = []
+    total_count = 0
+    for row in rows:
+        ts_value: Optional[datetime] = row.get("ts")
+        total_count = int(row.get("total_count") or total_count)
+        items.append(
+            {
+                "timestamp": ts_value.isoformat() if isinstance(ts_value, datetime) else None,
+                "customer_name": row.get("customer_name"),
+                "chassi": row.get("chassi"),
+                "chassi_last8": row.get("chassi_last8"),
+                "plate": row.get("plate"),
+                "dtc": row.get("dtc"),
+                "dtc_description": row.get("dtc_description"),
+                "status": row.get("status"),
+            }
+        )
+
+    total_pages = math.ceil(total_count / page_size) if page_size else 1
+
+    return {
+        "items": items,
+        "pagination": {
+            "page": page,
+            "page_size": page_size,
+            "total_items": total_count,
+            "total_pages": max(1, total_pages),
+        },
+        "range": {
+            "start_date": resolved_start.isoformat(),
+            "end_date": resolved_end.isoformat(),
+        },
+    }
 
 # --------------------------------------------------------------------------
 # Telemetria curta (últimos N minutos) para PLACA / IMEI / CHASSI(8)

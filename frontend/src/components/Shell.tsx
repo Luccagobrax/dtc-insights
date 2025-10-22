@@ -11,7 +11,7 @@ export default function Shell() {
     "/": "Página inicial",
     "/visao-geral": "Visão geral",
     "/assistente": "Assistente IA",
-    "/relatorios": "Relatórios",
+    "/historico": "Histórico",
   };
 
   const title = titles[location.pathname] ?? "dtc-insights";
