@@ -192,6 +192,9 @@ function formatVehicleLabel(row: HistoryEvent) {
   return "-";
 }
 
+const KPI_CARD_BASE_CLASSES =
+  "flex h-full min-h-[280px] sm:min-h-[300px] md:min-h-[400px] lg:min-h-[480px] xl:min-h-[520px] flex-col justify-between rounded-3xl border bg-white p-6 shadow-sm";
+
 function TrendKPI({
   currentTotal,
   previousTotal,
@@ -209,7 +212,7 @@ function TrendKPI({
 
   if (loading) {
     return (
-      <div className="flex h-full flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className={`${KPI_CARD_BASE_CLASSES} border-red-200`}>
         <div className="space-y-2">
           <div className="h-4 w-32 animate-pulse rounded bg-slate-200" />
           <div className="h-8 w-20 animate-pulse rounded bg-slate-200" />
@@ -241,7 +244,7 @@ function TrendKPI({
   const trendColor = direction === "up" ? "text-emerald-600" : direction === "down" ? "text-red-600" : "text-slate-500";
 
   return (
-    <div className="flex h-full flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className={`${KPI_CARD_BASE_CLASSES} border-slate-200`}>
       <div>
         <h2 className="text-base font-semibold text-slate-900">Tendência de eventos</h2>
         <p className="mt-6 text-4xl font-bold text-slate-900">{formattedTotal}</p>
@@ -255,10 +258,13 @@ function TrendKPI({
   );
 }
 
+const CHART_CARD_BASE_CLASSES =
+  "flex h-full min-h-[300px] sm:min-h-[320px] md:min-h-[400px] lg:min-h-[480px] xl:min-h-[520px] flex-col rounded-3xl border bg-white p-6 shadow-sm";
+
 function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: boolean; error: string | null }) {
   if (loading) {
     return (
-      <div className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className={`${CHART_CARD_BASE_CLASSES} border-slate-200`}>
         <div className="h-6 w-40 animate-pulse rounded bg-slate-200" />
         <div className="mt-6 flex-1 animate-pulse rounded-2xl bg-slate-100" />
       </div>
@@ -267,7 +273,7 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
 
   if (error) {
     return (
-      <div className="flex h-full flex-col rounded-3xl border border-red-200 bg-white p-6 shadow-sm">
+      <div className={`${CHART_CARD_BASE_CLASSES} border-red-200`}>
         <h2 className="text-base font-semibold text-slate-900">Eventos por dia</h2>
         <p className="mt-2 text-sm text-red-600">{error}</p>
       </div>
@@ -276,7 +282,7 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
 
   if (!data.length) {
     return (
-      <div className="flex h-full flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+      <div className={`${CHART_CARD_BASE_CLASSES} items-center justify-center border-slate-200 text-center`}>
         <h2 className="text-base font-semibold text-slate-900">Eventos por dia</h2>
         <p className="mt-4 text-sm text-slate-500">Nenhum dado disponível para os filtros selecionados.</p>
       </div>
@@ -285,7 +291,7 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
 
   const maxValue = data.reduce((max, point) => (point.count > max ? point.count : max), 0);
   const viewBoxWidth = Math.max(300, data.length * 40);
-  const viewBoxHeight = 220;
+  const viewBoxHeight = 400;
   const horizontalPadding = 24;
   const verticalPadding = 32;
   const usableWidth = viewBoxWidth - horizontalPadding * 2;
@@ -301,81 +307,89 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
   const polylinePoints = points.map(({ x, y }) => `${x},${y}`).join(" ");
 
   return (
-    <div className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className={`${CHART_CARD_BASE_CLASSES} border-slate-200`}>
       <h2 className="text-base font-semibold text-slate-900">Eventos por dia</h2>
-      <div className="mt-4 flex-1 overflow-x-auto">
-        <svg viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`} role="img" aria-label="Série temporal de eventos">
-          <defs>
-            <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(79, 70, 229, 0.35)" />
-              <stop offset="100%" stopColor="rgba(79, 70, 229, 0.05)" />
-            </linearGradient>
-          </defs>
+      <div className="mt-4 flex-1 overflow-hidden">
+        <div className="h-full w-full overflow-x-auto">
+          <svg
+            viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+            role="img"
+            aria-label="Série temporal de eventos"
+            width={viewBoxWidth}
+            className="h-full min-w-full"
+          >
+            <defs>
+              <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgba(79, 70, 229, 0.35)" />
+                <stop offset="100%" stopColor="rgba(79, 70, 229, 0.05)" />
+              </linearGradient>
+            </defs>
 
-          <rect x="0" y="0" width={viewBoxWidth} height={viewBoxHeight} fill="white" />
-          <line
-            x1={horizontalPadding}
-            x2={viewBoxWidth - horizontalPadding}
-            y1={viewBoxHeight - verticalPadding}
-            y2={viewBoxHeight - verticalPadding}
-            stroke="#E2E8F0"
-          />
-          <polyline
-            fill="none"
-            stroke="#4F46E5"
-            strokeWidth={3}
-            points={polylinePoints}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-          <polygon
-            points={`${horizontalPadding},${viewBoxHeight - verticalPadding} ${polylinePoints} ${viewBoxWidth - horizontalPadding},${viewBoxHeight - verticalPadding}`}
-            fill="url(#chartFill)"
-            opacity={0.6}
-          />
+            <rect x="0" y="0" width={viewBoxWidth} height={viewBoxHeight} fill="white" />
+            <line
+              x1={horizontalPadding}
+              x2={viewBoxWidth - horizontalPadding}
+              y1={viewBoxHeight - verticalPadding}
+              y2={viewBoxHeight - verticalPadding}
+              stroke="#E2E8F0"
+            />
+            <polyline
+              fill="none"
+              stroke="#4F46E5"
+              strokeWidth={3}
+              points={polylinePoints}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+            <polygon
+              points={`${horizontalPadding},${viewBoxHeight - verticalPadding} ${polylinePoints} ${viewBoxWidth - horizontalPadding},${viewBoxHeight - verticalPadding}`}
+              fill="url(#chartFill)"
+              opacity={0.6}
+            />
 
-          {points.map(({ x, y, point }) => {
-            const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date(point.date));
-            const breakdown = point.breakdown && point.breakdown.length
-              ? `\n${point.breakdown
-                  .slice(0, 4)
-                  .map((item) => `${item.dtc ?? "Sem código"}: ${item.count}`)
-                  .join("\n")}`
-              : "";
+            {points.map(({ x, y, point }) => {
+              const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date(point.date));
+              const breakdown = point.breakdown && point.breakdown.length
+                ? `\n${point.breakdown
+                    .slice(0, 4)
+                    .map((item) => `${item.dtc ?? "Sem código"}: ${item.count}`)
+                    .join("\n")}`
+                : "";
 
-            return (
-              <g key={point.date}>
-                <circle cx={x} cy={y} r={4.5} fill="#4338CA" />
-                <title>
-                  {`${label}: ${point.count} eventos${breakdown}`}
-                </title>
-              </g>
-            );
-          })}
+              return (
+                <g key={point.date}>
+                  <circle cx={x} cy={y} r={4.5} fill="#4338CA" />
+                  <title>
+                    {`${label}: ${point.count} eventos${breakdown}`}
+                  </title>
+                </g>
+              );
+            })}
 
-          {points.map(({ x, point }) => {
-            const date = new Date(point.date);
-            const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(date);
-            return (
-              <text key={`${point.date}-label`} x={x} y={viewBoxHeight - verticalPadding + 18} textAnchor="middle" fontSize="12" fill="#475569">
-                {label}
-              </text>
-            );
-          })}
-
-          {[0, 0.5, 1].map((fraction) => {
-            const value = Math.round(maxValue * fraction);
-            const y = verticalPadding + usableHeight - fraction * usableHeight;
-            return (
-              <g key={fraction}>
-                <line x1={horizontalPadding - 6} x2={horizontalPadding} y1={y} y2={y} stroke="#CBD5F5" />
-                <text x={horizontalPadding - 8} y={y + 4} textAnchor="end" fontSize="12" fill="#64748B">
-                  {value}
+            {points.map(({ x, point }) => {
+              const date = new Date(point.date);
+              const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(date);
+              return (
+                <text key={`${point.date}-label`} x={x} y={viewBoxHeight - verticalPadding + 18} textAnchor="middle" fontSize="12" fill="#475569">
+                  {label}
                 </text>
-              </g>
-            );
-          })}
-        </svg>
+              );
+            })}
+
+            {[0, 0.5, 1].map((fraction) => {
+              const value = Math.round(maxValue * fraction);
+              const y = verticalPadding + usableHeight - fraction * usableHeight;
+              return (
+                <g key={fraction}>
+                  <line x1={horizontalPadding - 6} x2={horizontalPadding} y1={y} y2={y} stroke="#CBD5F5" />
+                  <text x={horizontalPadding - 8} y={y + 4} textAnchor="end" fontSize="12" fill="#64748B">
+                    {value}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
       </div>
     </div>
   );
@@ -542,13 +556,16 @@ export default function Historico() {
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <form className="grid gap-4 md:grid-cols-6" onSubmit={handleSubmit}>
+          <form
+            className="grid auto-rows-fr gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] xl:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]"
+            onSubmit={handleSubmit}
+          >
             <div className="flex flex-col">
               <label className="text-xs font-semibold text-slate-600">Chassi (últimos 8 dígitos)</label>
               <input
                 type="text"
                 maxLength={8}
-                className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                className="mt-2 h-11 rounded-lg border border-slate-200 px-3 text-sm focus:border-slate-400 focus:outline-none"
                 value={filters.chassi}
                 onChange={(event) => setFilters((prev) => ({ ...prev, chassi: event.target.value.toUpperCase() }))}
                 placeholder="ABC12345"
@@ -559,7 +576,7 @@ export default function Historico() {
               <label className="text-xs font-semibold text-slate-600">Cliente</label>
               <input
                 type="text"
-                className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                className="mt-2 h-11 rounded-lg border border-slate-200 px-3 text-sm focus:border-slate-400 focus:outline-none"
                 value={filters.customer}
                 onChange={(event) => setFilters((prev) => ({ ...prev, customer: event.target.value }))}
                 placeholder="Nome do cliente"
@@ -570,7 +587,7 @@ export default function Historico() {
               <label className="text-xs font-semibold text-slate-600">DTC (código)</label>
               <input
                 type="text"
-                className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                className="mt-2 h-11 rounded-lg border border-slate-200 px-3 text-sm focus:border-slate-400 focus:outline-none"
                 value={filters.dtc}
                 onChange={(event) => setFilters((prev) => ({ ...prev, dtc: event.target.value.toUpperCase() }))}
                 placeholder="P1234"
@@ -581,7 +598,7 @@ export default function Historico() {
               <label className="text-xs font-semibold text-slate-600">Data inicial</label>
               <input
                 type="date"
-                className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                className="mt-2 h-11 rounded-lg border border-slate-200 px-3 text-sm focus:border-slate-400 focus:outline-none"
                 value={filters.startDate}
                 onChange={(event) => setFilters((prev) => ({ ...prev, startDate: event.target.value }))}
               />
@@ -591,16 +608,16 @@ export default function Historico() {
               <label className="text-xs font-semibold text-slate-600">Data final</label>
               <input
                 type="date"
-                className="mt-2 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+                className="mt-2 h-11 rounded-lg border border-slate-200 px-3 text-sm focus:border-slate-400 focus:outline-none"
                 value={filters.endDate}
                 onChange={(event) => setFilters((prev) => ({ ...prev, endDate: event.target.value }))}
               />
             </div>
 
-            <div className="mt-auto flex gap-2">
+            <div className="mt-auto flex flex-wrap items-center gap-2 sm:col-span-2 md:col-span-3 lg:col-span-2 xl:col-span-2">
               <button
                 type="submit"
-                className="inline-flex flex-1 items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="inline-flex h-11 flex-1 items-center justify-center rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
                 aria-label="Aplicar filtros"
               >
                 Aplicar filtros
@@ -608,7 +625,7 @@ export default function Historico() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
+                className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-800"
                 aria-label="Limpar filtros"
               >
                 Limpar
@@ -619,8 +636,8 @@ export default function Historico() {
       </section>
 
       <section className="flex-1 min-h-0 overflow-hidden px-6 pb-6">
-        <div className="flex h-full min-h-0 flex-col gap-6">
-          <div className="grid flex-shrink-0 gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
+          <div className="grid flex-shrink-0 gap-6 lg:grid-cols-[clamp(280px,32%,320px)_minmax(0,1fr)] xl:grid-cols-[clamp(300px,28%,360px)_minmax(0,1fr)]">
             <TrendKPI currentTotal={currentTotal} previousTotal={previousTotal} loading={kpiLoading} error={kpiError} />
             <EventsChart data={series} loading={dailyLoading} error={dailyError} />
           </div>
@@ -653,29 +670,55 @@ export default function Historico() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-auto">
-                <table className="min-w-full divide-y divide-slate-200" aria-label="Tabela de eventos filtrados">
+              <div className="flex-1 overflow-hidden">
+                <div className="h-full w-full overflow-y-auto">
+                  <div className="min-w-full overflow-x-auto">
+                    <table
+                      className="min-w-[720px] divide-y divide-slate-200 lg:min-w-full"
+                      aria-label="Tabela de eventos filtrados"
+                    >
                   <thead className="bg-slate-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                      >
                         Data/hora do evento
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                      >
                         Cliente
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                      >
                         Veículo
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                      >
                         Chassi (últimos 8)
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                      >
                         DTC
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                      >
                         Descrição
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
+                      >
                         Status
                       </th>
                     </tr>
@@ -693,16 +736,16 @@ export default function Historico() {
                           <td className="px-6 py-4">
                             <div className="h-4 w-24 rounded bg-slate-200" />
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="hidden px-6 py-4 lg:table-cell">
                             <div className="h-4 w-20 rounded bg-slate-200" />
                           </td>
                           <td className="px-6 py-4">
                             <div className="h-4 w-16 rounded bg-slate-200" />
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="hidden px-6 py-4 lg:table-cell">
                             <div className="h-4 w-36 rounded bg-slate-200" />
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="hidden px-6 py-4 lg:table-cell">
                             <div className="h-4 w-20 rounded bg-slate-200" />
                           </td>
                         </tr>
@@ -719,15 +762,19 @@ export default function Historico() {
                           <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">{formatDateTime(event.timestamp)}</td>
                           <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">{event.customer_name || "-"}</td>
                           <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">{formatVehicleLabel(event)}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">{event.chassi_last8 || "-"}</td>
+                          <td className="hidden whitespace-nowrap px-6 py-4 text-sm text-slate-700 lg:table-cell">{event.chassi_last8 || "-"}</td>
                           <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">{event.dtc || "-"}</td>
-                          <td className="px-6 py-4 text-sm text-slate-700">{event.dtc_description || "-"}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">{event.status || "-"}</td>
+                          <td className="hidden px-6 py-4 text-sm text-slate-700 sm:table-cell sm:max-w-xs sm:whitespace-normal sm:leading-5">
+                            {event.dtc_description || "-"}
+                          </td>
+                          <td className="hidden whitespace-nowrap px-6 py-4 text-sm text-slate-700 md:table-cell">{event.status || "-"}</td>
                         </tr>
                       ))
                     )}
                   </tbody>
-                </table>
+                    </table>
+                  </div>
+                </div>
               </div>
 
               <div className="flex flex-shrink-0 items-center justify-between border-t border-slate-200 px-6 py-4">
