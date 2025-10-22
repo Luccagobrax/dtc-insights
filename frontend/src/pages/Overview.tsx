@@ -52,25 +52,24 @@ const cards = [
 
 export default function Overview() {
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto bg-slate-100">
-      <div className="flex min-h-[calc(100vh-72px)] items-center justify-center px-6">
-        <div className="w-full max-w-6xl mx-auto text-center">
-        <section className="max-w-5xl mx-auto">
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
+    <div className="flex h-full min-h-full w-full flex-1 items-center justify-center bg-slate-100">
+      <div className="flex w-full max-w-[1820px] flex-col items-center px-8 text-center">
+        <section className="w-full space-y-6 mt-20">
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
             DTC’s Insights
           </h1>
-          <p className="mx-auto mt-4 text-base text-slate-600 md:text-lg">
+          <p className="mx-auto text-base text-slate-600 md:text-lg">
             Explore análises inteligentes, acompanhe indicadores e mergulhe nos dados dos veículos com poucos cliques.
           </p>
         </section>
 
-        <section className="mt-16 w-full">
-          <div className="mx-auto grid w-full max-w-[1120px] gap-10 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
+        <section className="mt-48 w-full">
+          <div className="grid w-full gap-10 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
             {cards.map((card) => (
-            <article
-              key={card.title}
-              className="flex h-full w-full flex-col items-center gap-8 rounded-3xl bg-white p-10 text-center shadow-md ring-1 ring-slate-200 transition-all hover:-translate-y-1 hover:shadow-xl"
-            >
+              <article
+                key={card.title}
+                className="flex h-full w-full flex-col items-center gap-8 rounded-3xl bg-white p-10 text-center shadow-md ring-1 ring-slate-200 transition-all hover:-translate-y-1 hover:shadow-xl"
+              >
                 <header className="flex flex-col items-center gap-4">
                   <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#FFD31C]/80 text-2xl text-slate-900">
                     {card.icon}
@@ -101,6 +100,5 @@ export default function Overview() {
         </section>
       </div>
     </div>
-  </div>
   );
 }

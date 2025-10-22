@@ -244,7 +244,7 @@ export default function VisaoGeral() {
   }, [mapInstance]);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <section className="flex-shrink-0 space-y-4 p-6">
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
           <h1 className="text-3xl font-semibold text-slate-900">Visão geral de DTCs</h1>
@@ -320,13 +320,12 @@ export default function VisaoGeral() {
         </div>
       </section>
 
-      <section className="flex-1 overflow-hidden px-6 pb-6">
-        <div className="h-full grid grid-rows-[40vh_1fr] gap-6 lg:grid-rows-none lg:grid-cols-[380px_1fr]">
+      <section className="flex-1 min-h-0 overflow-hidden px-6 pb-6">
+        <div className="grid h-full min-h-0 grid-rows-[40vh_1fr] gap-6 lg:grid-rows-none lg:grid-cols-[380px_1fr]">
           <aside
             id="recent-events"
-            className="h-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm"
-          >
-            <div className="flex h-full flex-col">
+            className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"          >
+            <div className="flex flex-1 flex-col overflow-y-auto">
               <div className="sticky top-0 z-10 border-b border-slate-200 bg-white px-4 py-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-slate-900">Eventos recentes</h2>
@@ -368,29 +367,26 @@ export default function VisaoGeral() {
 
           <div
             id="map-wrapper"
-            className="h-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
           >
-            <div className="flex h-full flex-col">
-              <div className="border-b border-slate-200 px-5 py-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-slate-900">Mapa de ocorrências</h2>
-                  <span className="text-xs font-medium text-slate-500">{eventsWithCoords.length} pontos mapeados</span>
-                </div>
+            <div className="border-b border-slate-200 px-5 py-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-slate-900">Mapa de ocorrências</h2>
+                <span className="text-xs font-medium text-slate-500">{eventsWithCoords.length} pontos mapeados</span>
               </div>
+            </div>
 
-              <div className="flex-1 overflow-hidden p-4">
-                <div className="relative h-full w-full">
-                  <div id="map-container" ref={mapContainerRef} className="h-full w-full" />
-                  {mapError && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 text-sm text-red-600">
-                      {mapError}
-                    </div>
-                  )}
-                </div>
+            <div className="flex-1 overflow-hidden p-4">
+              <div className="relative h-full w-full">
+                <div id="map-container" ref={mapContainerRef} className="h-full w-full" />
+                {mapError && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 text-sm text-red-600">
+                    {mapError}
+                  </div>
+                )}
               </div>
             </div>
-            </div>
- 
+          </div>
         </div>
       </section>
 

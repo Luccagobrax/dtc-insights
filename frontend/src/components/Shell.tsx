@@ -60,7 +60,9 @@ export default function Shell() {
         style={hasSidebar ? { gridTemplateColumns: "var(--sidebar-width,260px) minmax(0,1fr)" } : undefined}
 >
         {hasSidebar ? <Sidebar /> : null}
-        <main className="relative flex min-h-0 flex-col overflow-y-auto bg-slate-100">
+        <main
+          className="relative flex h-[calc(100vh-72px)] min-h-0 flex-1 flex-col overflow-hidden bg-slate-100"
+        >
           <Outlet />
         </main>
       </div>
