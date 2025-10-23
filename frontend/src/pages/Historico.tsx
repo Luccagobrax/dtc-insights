@@ -154,7 +154,6 @@ function downloadCSV(rows: HistoryEvent[]) {
     "Data/hora do evento",
     "Cliente",
     "Veículo",
-    "Chassi (últimos 8)",
     "DTC",
     "Descrição",
     "Status",
@@ -163,7 +162,7 @@ function downloadCSV(rows: HistoryEvent[]) {
     const date = formatDateTime(row.timestamp);
     const vehicle = formatVehicleLabel(row);
     const safe = (value: string | null | undefined) => (value ?? "").replace(/"/g, '""');
-    return [date, row.customer_name ?? "", vehicle, row.chassi_last8 ?? "", row.dtc ?? "", row.dtc_description ?? "", row.status ?? ""]
+    return [date, row.customer_name ?? "", vehicle, row.dtc ?? "", row.dtc_description ?? "", row.status ?? ""]
       .map((value) => `"${safe(value)}"`)
       .join(";");
   });
@@ -193,7 +192,7 @@ function formatVehicleLabel(row: HistoryEvent) {
 }
 
 const KPI_CARD_BASE_CLASSES =
-  "flex h-[320px] flex-none min-h-0 flex-col justify-between rounded-3xl border bg-white p-6 shadow-sm md:h-[400px] lg:h-[480px] xl:h-[480px]";
+  "flex h-full min-h-0 flex-col rounded-3xl border bg-white p-6 text-center shadow-sm";
 
 function TrendKPI({
   currentTotal,
@@ -212,12 +211,12 @@ function TrendKPI({
 
   if (loading) {
     return (
-      <div className={`${KPI_CARD_BASE_CLASSES} border-red-200`}>
-        <div className="space-y-2">
+      <div className={`${KPI_CARD_BASE_CLASSES} border-slate-200`}>
+        <h2 className="text-base font-semibold text-slate-900">Tendência de eventos</h2>
+        <div className="flex flex-1 flex-col items-center justify-center gap-4">
+          <div className="h-10 w-24 animate-pulse rounded bg-slate-200" />
           <div className="h-4 w-32 animate-pulse rounded bg-slate-200" />
-          <div className="h-8 w-20 animate-pulse rounded bg-slate-200" />
         </div>
-        <div className="h-4 w-28 animate-pulse rounded bg-slate-200" />
       </div>
     );
   }
@@ -225,11 +224,11 @@ function TrendKPI({
   if (error) {
     return (
       <div className={`${KPI_CARD_BASE_CLASSES} border-red-200`}>
-        <div>
-          <h2 className="text-base font-semibold text-slate-900">Tendência de eventos</h2>
-          <p className="mt-2 text-sm text-red-600">{error}</p>
+        <h2 className="text-base font-semibold text-slate-900">Tendência de eventos</h2>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3">
+          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-xs text-slate-500">Tente aplicar os filtros novamente.</p>
         </div>
-        <p className="text-xs text-slate-500">Tente aplicar os filtros novamente.</p>
       </div>
     );
   }
@@ -245,21 +244,21 @@ function TrendKPI({
 
   return (
     <div className={`${KPI_CARD_BASE_CLASSES} border-slate-200`}>
-      <div>
-        <h2 className="text-base font-semibold text-slate-900">Tendência de eventos</h2>
-        <p className="mt-6 text-4xl font-bold text-slate-900">{formattedTotal}</p>
+      <h2 className="text-base font-semibold text-slate-900">Tendência de eventos</h2>
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <p className="text-5xl font-bold leading-tight text-slate-900">{formattedTotal}</p>
+        <p className={`mt-3 text-sm font-semibold ${trendColor}`}>
+          <span aria-hidden className="mr-1">{trendLabel}</span>
+          <span className="mr-1">{formattedPercent}%</span>
+          <span className="font-normal text-slate-500">vs período anterior</span>
+        </p>
       </div>
-      <p className={`text-sm font-semibold ${trendColor}`}>
-        <span aria-hidden className="mr-1">{trendLabel}</span>
-        <span className="mr-1">{formattedPercent}%</span>
-        <span className="font-normal text-slate-500">vs período anterior</span>
-      </p>
     </div>
   );
 }
 
 const CHART_CARD_BASE_CLASSES =
-  "flex h-[320px] flex-none min-h-0 min-w-0 flex-col rounded-3xl border bg-white p-6 shadow-sm md:h-[400px] lg:h-[480px] xl:h-[480px]";
+  "flex h-full min-h-0 min-w-0 flex-col rounded-3xl border bg-white p-6 shadow-sm";
 
 function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: boolean; error: string | null }) {
   if (loading) {
@@ -290,7 +289,7 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
   }
 
   const maxValue = data.reduce((max, point) => (point.count > max ? point.count : max), 0);
-  const rawWidth = data.length * 40;
+  const rawWidth = data.length * 56;
   const viewBoxWidth = Math.min(1600, Math.max(600, rawWidth));
   const viewBoxHeight = 400;
   const horizontalPadding = 24;
@@ -308,6 +307,10 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
 
   const polylinePoints = points.map(({ x, y }) => `${x},${y}`).join(" ");
 
+  const maxLabelCount = Math.max(1, Math.floor(usableWidth / 90));
+  const labelStep = Math.max(1, Math.ceil(data.length / maxLabelCount));
+
+
   return (
     <div className={`${CHART_CARD_BASE_CLASSES} border-slate-200`}>
       <h2 className="text-base font-semibold text-slate-900">Eventos por dia</h2>
@@ -319,7 +322,7 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
             className="h-full"
             style={{ minWidth: enableHorizontalScroll ? `${viewBoxWidth}px` : "100%" }}
           >
-                        <svg
+            <svg
               viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
               role="img"
               aria-label="Série temporal de eventos"
@@ -369,6 +372,16 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
               return (
                 <g key={point.date}>
                   <circle cx={x} cy={y} r={4.5} fill="#4338CA" />
+                  <text
+                    x={x}
+                    y={Math.min(viewBoxHeight - verticalPadding - 12, Math.max(verticalPadding + 16, y - 12))}
+                    textAnchor="middle"
+                    fontSize="11"
+                    fontWeight={600}
+                    fill="#312E81"
+                  >
+                    {point.count.toLocaleString("pt-BR")}
+                  </text>
                   <title>
                     {`${label}: ${point.count} eventos${breakdown}`}
                   </title>
@@ -376,28 +389,27 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
               );
             })}
 
-            {points.map(({ x, point }) => {
+            {points.map(({ x, point }, index) => {
               const date = new Date(point.date);
-              const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(date);
+              if (index % labelStep !== 0 && index !== data.length - 1) {
+                return null;
+              }
+              const day = new Intl.DateTimeFormat("pt-BR", { day: "2-digit" }).format(date);
+              const month = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(date);
               return (
-                <text key={`${point.date}-label`} x={x} y={viewBoxHeight - verticalPadding + 18} textAnchor="middle" fontSize="12" fill="#475569">
-                  {label}
+                <text
+                  key={`${point.date}-label`}
+                  x={x}
+                  y={viewBoxHeight - verticalPadding + 20}
+                  textAnchor="middle"
+                  fontSize="12"
+                  fill="#475569"
+                >
+                  {`${day} de ${month}`}
                 </text>
               );
             })}
 
-            {[0, 0.5, 1].map((fraction) => {
-              const value = Math.round(maxValue * fraction);
-              const y = verticalPadding + usableHeight - fraction * usableHeight;
-              return (
-                <g key={fraction}>
-                  <line x1={horizontalPadding - 6} x2={horizontalPadding} y1={y} y2={y} stroke="#CBD5F5" />
-                  <text x={horizontalPadding - 8} y={y + 4} textAnchor="end" fontSize="12" fill="#64748B">
-                    {value}
-                  </text>
-                </g>
-              );
-            })}
             </svg>
           </div>
         </div>
@@ -647,13 +659,13 @@ export default function Historico() {
       </section>
 
       <section className="flex-1 min-h-0 overflow-hidden px-6 pb-6">
-        <div className="flex h-full min-h-0 flex-col gap-6 overflow-hidden">
-          <div className="grid flex-none min-h-0 gap-6 md:grid-cols-[clamp(280px,30%,340px)_minmax(0,1fr)] lg:grid-cols-[clamp(300px,28%,360px)_minmax(0,1fr)]">
+        <div className="grid h-full min-h-0 gap-6 overflow-hidden grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="grid min-h-0 auto-rows-fr gap-6 md:grid-cols-[clamp(280px,30%,340px)_minmax(0,1fr)] lg:grid-cols-[clamp(300px,28%,360px)_minmax(0,1fr)]">
             <TrendKPI currentTotal={currentTotal} previousTotal={previousTotal} loading={kpiLoading} error={kpiError} />
             <EventsChart data={series} loading={dailyLoading} error={dailyError} />
           </div>
 
-          <div className="flex-1 min-h-0">
+          <div className="min-h-0">
             <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-200 px-6 py-4">
                 <div>
@@ -688,7 +700,7 @@ export default function Historico() {
                       className="min-w-[720px] divide-y divide-slate-200 lg:min-w-full"
                       aria-label="Tabela de eventos filtrados"
                     >
-                  <thead className="bg-slate-50">
+                  <thead className="sticky top-0 z-10 bg-slate-50">
                     <tr>
                       <th
                         scope="col"
@@ -707,12 +719,6 @@ export default function Historico() {
                         className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
                       >
                         Veículo
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500"
-                      >
-                        Chassi (últimos 8)
                       </th>
                       <th
                         scope="col"
@@ -747,23 +753,20 @@ export default function Historico() {
                           <td className="px-6 py-4">
                             <div className="h-4 w-24 rounded bg-slate-200" />
                           </td>
-                          <td className="hidden px-6 py-4 lg:table-cell">
-                            <div className="h-4 w-20 rounded bg-slate-200" />
-                          </td>
                           <td className="px-6 py-4">
                             <div className="h-4 w-16 rounded bg-slate-200" />
                           </td>
-                          <td className="hidden px-6 py-4 lg:table-cell">
+                          <td className="hidden px-6 py-4 sm:table-cell">
                             <div className="h-4 w-36 rounded bg-slate-200" />
                           </td>
-                          <td className="hidden px-6 py-4 lg:table-cell">
+                          <td className="hidden px-6 py-4 md:table-cell">
                             <div className="h-4 w-20 rounded bg-slate-200" />
                           </td>
                         </tr>
                       ))
                     ) : tableData.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-500">
+                        <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-500">
                           {tableError ?? "Nenhum evento encontrado para os filtros informados."}
                         </td>
                       </tr>
@@ -773,7 +776,6 @@ export default function Historico() {
                           <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">{formatDateTime(event.timestamp)}</td>
                           <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">{event.customer_name || "-"}</td>
                           <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">{formatVehicleLabel(event)}</td>
-                          <td className="hidden whitespace-nowrap px-6 py-4 text-sm text-slate-700 lg:table-cell">{event.chassi_last8 || "-"}</td>
                           <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-700">{event.dtc || "-"}</td>
                           <td className="hidden px-6 py-4 text-sm text-slate-700 sm:table-cell sm:max-w-xs sm:whitespace-normal sm:leading-5">
                             {event.dtc_description || "-"}
