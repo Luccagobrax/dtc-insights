@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import api from "../lib/api";
 
@@ -147,6 +147,10 @@ function computePreviousRange(filters: Filters): { startDate: string; endDate: s
     endDate: formatInputDate(previousEnd),
   };
 }
+function clampValue(min: number, value: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
 
 function downloadCSV(rows: HistoryEvent[]) {
   if (rows.length === 0) return;
@@ -193,6 +197,36 @@ function formatVehicleLabel(row: HistoryEvent) {
 
 const KPI_CARD_BASE_CLASSES =
   "flex h-full min-h-0 flex-col rounded-3xl border bg-white p-6 text-center shadow-sm";
+
+function useViewportWidth() {
+  const [viewportWidth, setViewportWidth] = useState<number>(() =>
+    typeof window === "undefined" ? 1024 : window.innerWidth,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return viewportWidth;
+}
+
+function formatDataLabel(value: number) {
+  if (value >= 1000) {
+    const compact = (value / 1000).toFixed(value >= 10000 ? 0 : 1);
+    return `${compact.replace(/\.0$/, "")}k`;
+  }
+
+  return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 }).format(value);
+}
 
 function TrendKPI({
   currentTotal,
@@ -261,6 +295,47 @@ const CHART_CARD_BASE_CLASSES =
   "flex h-full min-h-0 min-w-0 flex-col rounded-3xl border bg-white p-6 shadow-sm";
 
 function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: boolean; error: string | null }) {
+  const viewportWidth = useViewportWidth();
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    const element = scrollContainerRef.current;
+    if (!element) {
+      return;
+    }
+
+    const updateWidth = () => {
+      setContainerWidth(element.clientWidth);
+    };
+
+    updateWidth();
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const globalWindow = globalThis as Window & typeof globalThis;
+
+    if (typeof globalWindow.ResizeObserver === "function") {
+      const observer = new globalWindow.ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (entry) {
+          setContainerWidth(entry.contentRect.width);
+        }
+      });
+      observer.observe(element);
+      return () => observer.disconnect();
+    }
+
+    if (typeof globalWindow.addEventListener === "function") {
+      globalWindow.addEventListener("resize", updateWidth);
+      return () => globalWindow.removeEventListener("resize", updateWidth);
+    }
+
+    return undefined;
+  }, []);
+
   if (loading) {
     return (
       <div className={`${CHART_CARD_BASE_CLASSES} border-slate-200`}>
@@ -289,34 +364,35 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
   }
 
   const maxValue = data.reduce((max, point) => (point.count > max ? point.count : max), 0);
-  const rawWidth = data.length * 56;
-  const viewBoxWidth = Math.min(1600, Math.max(600, rawWidth));
+  const sizeCategory = viewportWidth >= 1024 ? "lg" : viewportWidth >= 768 ? "md" : "sm";
+  const step = sizeCategory === "lg" ? 40 : sizeCategory === "md" ? 35 : 30;
+  const rawWidth = data.length * step;
+  const viewBoxWidth = clampValue(720, rawWidth, 1400);
   const viewBoxHeight = 400;
   const horizontalPadding = 24;
   const verticalPadding = 32;
   const usableWidth = viewBoxWidth - horizontalPadding * 2;
   const usableHeight = viewBoxHeight - verticalPadding * 2;
-  const enableHorizontalScroll = rawWidth > 960;
+  const enableHorizontalScroll = containerWidth > 0 ? viewBoxWidth > containerWidth : viewBoxWidth > 960;
 
   const points = data.map((point, index) => {
     const x = horizontalPadding + (data.length > 1 ? (usableWidth * index) / (data.length - 1) : usableWidth / 2);
     const valueRatio = maxValue === 0 ? 0 : point.count / maxValue;
     const y = verticalPadding + usableHeight - valueRatio * usableHeight;
-    return { x, y, point };
+    return { x, y, point, index };
   });
 
   const polylinePoints = points.map(({ x, y }) => `${x},${y}`).join(" ");
-
-  const maxLabelCount = Math.max(1, Math.floor(usableWidth / 90));
-  const labelStep = Math.max(1, Math.ceil(data.length / maxLabelCount));
-
+  const divisor = sizeCategory === "lg" ? 10 : sizeCategory === "md" ? 8 : 6;
+  const labelInterval = Math.max(1, Math.ceil(data.length / divisor));
 
   return (
     <div className={`${CHART_CARD_BASE_CLASSES} border-slate-200`}>
       <h2 className="text-base font-semibold text-slate-900">Eventos por dia</h2>
-      <div className="mt-4 flex-1 min-h-0 overflow-hidden">
+      <div className="mt-4 flex-1 min-h-0">
         <div
-          className={`h-full w-full ${enableHorizontalScroll ? "overflow-x-auto" : "overflow-hidden"}`}
+          ref={scrollContainerRef}
+          className={`h-full w-full min-h-0 ${enableHorizontalScroll ? "overflow-x-auto" : "overflow-hidden"}`}
         >
           <div
             className="h-full"
@@ -331,84 +407,93 @@ function EventsChart({ data, loading, error }: { data: DailyPoint[]; loading: bo
               preserveAspectRatio="none"
               className="h-full w-full"
             >
-            <defs>
-              <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="rgba(79, 70, 229, 0.35)" />
-                <stop offset="100%" stopColor="rgba(79, 70, 229, 0.05)" />
-              </linearGradient>
-            </defs>
+              <defs>
+                <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="rgba(79, 70, 229, 0.35)" />
+                  <stop offset="100%" stopColor="rgba(79, 70, 229, 0.05)" />
+                </linearGradient>
+              </defs>
 
-            <rect x="0" y="0" width={viewBoxWidth} height={viewBoxHeight} fill="white" />
-            <line
-              x1={horizontalPadding}
-              x2={viewBoxWidth - horizontalPadding}
-              y1={viewBoxHeight - verticalPadding}
-              y2={viewBoxHeight - verticalPadding}
-              stroke="#E2E8F0"
-            />
-            <polyline
-              fill="none"
-              stroke="#4F46E5"
-              strokeWidth={3}
-              points={polylinePoints}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-            <polygon
-              points={`${horizontalPadding},${viewBoxHeight - verticalPadding} ${polylinePoints} ${viewBoxWidth - horizontalPadding},${viewBoxHeight - verticalPadding}`}
-              fill="url(#chartFill)"
-              opacity={0.6}
-            />
+              <rect x="0" y="0" width={viewBoxWidth} height={viewBoxHeight} fill="white" />
+              <line
+                x1={horizontalPadding}
+                x2={viewBoxWidth - horizontalPadding}
+                y1={viewBoxHeight - verticalPadding}
+                y2={viewBoxHeight - verticalPadding}
+                stroke="#E2E8F0"
+              />
+              <polyline
+                fill="none"
+                stroke="#4F46E5"
+                strokeWidth={3}
+                points={polylinePoints}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              <polygon
+                points={`${horizontalPadding},${viewBoxHeight - verticalPadding} ${polylinePoints} ${viewBoxWidth - horizontalPadding},${viewBoxHeight - verticalPadding}`}
+                fill="url(#chartFill)"
+                opacity={0.6}
+              />
 
-            {points.map(({ x, y, point }) => {
-              const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date(point.date));
-              const breakdown = point.breakdown && point.breakdown.length
-                ? `\n${point.breakdown
-                    .slice(0, 4)
-                    .map((item) => `${item.dtc ?? "Sem código"}: ${item.count}`)
-                    .join("\n")}`
-                : "";
+              {points.map(({ x, y, point, index }) => {
+                const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(
+                  new Date(point.date),
+                );
+                const breakdown = point.breakdown && point.breakdown.length
+                  ? `\n${point.breakdown
+                      .slice(0, 4)
+                      .map((item) => `${item.dtc ?? "Sem código"}: ${item.count}`)
+                      .join("\n")}`
+                  : "";
+                const shouldShowValue = index % labelInterval === 0;
+                const valueY = clampValue(verticalPadding + 12, y - 10, viewBoxHeight - verticalPadding - 12);
 
-              return (
-                <g key={point.date}>
-                  <circle cx={x} cy={y} r={4.5} fill="#4338CA" />
+                return (
+                  <g key={point.date}>
+                    <circle cx={x} cy={y} r={4.5} fill="#4338CA" />
+                    {shouldShowValue ? (
+                      <text
+                        x={x}
+                        y={valueY}
+                        textAnchor="middle"
+                        fontSize="11"
+                        fontWeight={600}
+                        fill="#312E81"
+                      >
+                        {formatDataLabel(point.count)}
+                      </text>
+                    ) : null}
+                    <title>
+                      {`${label}: ${point.count} eventos${breakdown}`}
+                    </title>
+                  </g>
+                );
+              })}
+
+              {points.map(({ x, point, index }) => {
+                if (index % labelInterval !== 0) {
+                  return null;
+                }
+                const date = new Date(point.date);
+                const day = new Intl.DateTimeFormat("pt-BR", { day: "2-digit" }).format(date);
+                const month = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(date);
+                const label = `${day} de ${month}`;
+                const labelY = viewBoxHeight - verticalPadding + 24;
+                return (
                   <text
+                    key={`${point.date}-label`}
                     x={x}
-                    y={Math.min(viewBoxHeight - verticalPadding - 12, Math.max(verticalPadding + 16, y - 12))}
+                    y={labelY}
                     textAnchor="middle"
-                    fontSize="11"
-                    fontWeight={600}
-                    fill="#312E81"
+                    fontSize="12"
+                    fill="#475569"
+                    transform={`rotate(-12 ${x} ${labelY})`}
                   >
-                    {point.count.toLocaleString("pt-BR")}
+                    {label}
                   </text>
-                  <title>
-                    {`${label}: ${point.count} eventos${breakdown}`}
-                  </title>
-                </g>
-              );
-            })}
-
-            {points.map(({ x, point }, index) => {
-              const date = new Date(point.date);
-              if (index % labelStep !== 0 && index !== data.length - 1) {
-                return null;
-              }
-              const day = new Intl.DateTimeFormat("pt-BR", { day: "2-digit" }).format(date);
-              const month = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(date);
-              return (
-                <text
-                  key={`${point.date}-label`}
-                  x={x}
-                  y={viewBoxHeight - verticalPadding + 20}
-                  textAnchor="middle"
-                  fontSize="12"
-                  fill="#475569"
-                >
-                  {`${day} de ${month}`}
-                </text>
-              );
-            })}
+                );
+              })}
 
             </svg>
           </div>
@@ -666,7 +751,7 @@ export default function Historico() {
           </div>
 
           <div className="min-h-0">
-            <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex h-full min-h-0 flex-col rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-200 px-6 py-4">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">Eventos detalhados</h2>
@@ -693,14 +778,15 @@ export default function Historico() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-hidden">
-                <div className="h-full w-full overflow-y-auto">
-                  <div className="min-w-full overflow-x-auto">
-                    <table
-                      className="min-w-[720px] divide-y divide-slate-200 lg:min-w-full"
-                      aria-label="Tabela de eventos filtrados"
-                    >
-                  <thead className="sticky top-0 z-10 bg-slate-50">
+              <div className="flex-1 min-h-0">
+                <div className="h-full w-full min-h-0 overflow-x-auto">
+                  <div className="flex h-full min-h-0 flex-col">
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                      <table
+                        className="min-w-[960px] divide-y divide-slate-200 lg:min-w-[1120px]"
+                        aria-label="Tabela de eventos filtrados"
+                      >
+                  <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_rgba(148,163,184,0.35)]">
                     <tr>
                       <th
                         scope="col"
@@ -785,7 +871,8 @@ export default function Historico() {
                       ))
                     )}
                   </tbody>
-                    </table>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
